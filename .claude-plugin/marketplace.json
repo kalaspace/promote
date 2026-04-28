@@ -1,0 +1,20 @@
+{
+  "name": "promote-marketplace",
+  "owner": {
+    "name": "François Neumann",
+    "email": "francois.neumann@flex.eu"
+  },
+  "metadata": {
+    "description": "Promote: 20-skill stack for end-to-end product promotion strategy. Takes a URL, asks the right questions about the product, produces a publish-ready strategy package.",
+    "version": "1.0.0"
+  },
+  "plugins": [
+    {
+      "name": "promote",
+      "source": "./",
+      "description": "End-to-end promotion stack: 1 strategist orchestrator + 11 operator personas (Hormozi, Schwartz, Cialdini, Voss, Holiday, Ammar, Paul Graham, X-Mastery, MrBeast, Steve Jobs, customer-research) + 6 framework skills (JTBD-Switch, Dunford-Positioning, Four-Fits, PLG-Design, GEO-Optimization, AI-Content-Pipeline) + 1 utility (huashu-nuwa) + 11 reference docs (Rumelt strategy kernel, Cialdini psychology, JTBD, GEO levers, growth loops, North Star, demand-gen, attribution, network effects, copy frameworks, skill-grammar).",
+      "version": "1.0.0",
+      "category": "marketing"
+    }
+  ]
+}

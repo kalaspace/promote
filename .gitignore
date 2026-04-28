@@ -1,0 +1,29 @@
+# Runtime state of campaigns (per-user, not part of the distributable system)
+campaigns/*/
+
+# Audit working zone (clones of external repos, can be regenerated)
+skills-source/from-public/
+skills-source/from-local/
+
+# Claude Code plugin runtime cache (volatile, regenerated on /plugin install)
+.claude/plugins/
+
+# Dev mode symlinks created by install.sh (not committed — generated locally)
+.claude/skills/promote-*
+
+# Local secrets (when the executor part lands)
+.env
+.env.local
+secrets.json
+
+# Editor / OS
+.DS_Store
+*.swp
+*.swo
+.idea/
+.vscode/
+__pycache__/
+*.pyc
+
+# Local Claude Code project settings (user-specific)
+.claude/settings.local.json

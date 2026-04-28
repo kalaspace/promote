@@ -1,0 +1,43 @@
+# Instrumentation
+
+## North Star Metric
+
+- **NSM**: {name + one-sentence definition}
+- **Why this NSM**: {captures value, not vanity}
+- **Frequency of review**: {weekly | monthly}
+
+## Input metrics (3-5)
+
+| Input | Definition | Owner | Target | Frequency |
+|---|---|---|---|---|
+| | | | | |
+
+## Attribution stack
+
+### What we will track (and how)
+
+| Channel | Last-click? | Multi-touch? | Best signal |
+|---|---|---|---|
+| | | | |
+
+### Self-reported attribution
+
+- **Form field**: 
+- **Categories** (5-7): 
+- **Frequency of analysis**: 
+- **Owner**: 
+
+### Branded search tracking
+
+- **Tool**: {Ahrefs | SEMrush | Search Console}
+- **Baseline**: {current monthly volume}
+- **Target**: {+X% in 90 days}
+
+## Kill-switch on attribution drift
+
+- **Trigger**: {primary KPI drops Y% over Z weeks AND multi-touch doesn't explain}
+- **Response**: trigger pivot review
+
+## PG's first-100-users plan
+
+{concrete do-things-that-don't-scale actions}

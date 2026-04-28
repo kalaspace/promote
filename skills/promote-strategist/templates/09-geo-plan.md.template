@@ -1,0 +1,39 @@
+# GEO Plan
+
+## 7-lever audit
+
+| # | Lever | Score 0-10 | Evidence |
+|---|---|---|---|
+| 1 | High-authority domain mention | | |
+| 2 | Statistical density | | |
+| 3 | Expert quotes | | |
+| 4 | Schema.org markup | | |
+| 5 | Extractable formatting | | |
+| 6 | Question-answering structure | | |
+| 7 | Freshness signals | | |
+
+## 3 weakest levers (highest improvement leverage)
+
+1. **Lever {#}**: {name} — score {X} — leverage: 
+2. **Lever {#}**: 
+3. **Lever {#}**: 
+
+## Prescribed actions
+
+### Action 1
+- **What**: 
+- **Effort**: 
+- **Expected impact**: 
+- **Owner**: 
+
+### Action 2
+[idem]
+
+### Action 3
+[idem]
+
+## Measurement plan
+
+- **Baseline test (5 queries × 4 LLMs)**: 
+- **Re-test cadence**: 60 / 90 / 180 days
+- **Success criterion**: cited in ≥2 of 5 queries within 180 days

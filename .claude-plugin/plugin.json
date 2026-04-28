@@ -1,0 +1,19 @@
+{
+  "name": "promote",
+  "version": "1.0.0",
+  "description": "End-to-end product promotion strategy. Give /promote-strategist a URL, get a complete strategy package: positioning, offer audit, growth fits, channel mix, content pillars, GEO plan, instrumentation, 90-day calendar, and a YAML hand-off contract for the executor (Part 2, in development).",
+  "author": {
+    "name": "François Neumann"
+  },
+  "license": "MIT",
+  "homepage": "https://github.com/kalaspace/promote",
+  "skills": "./skills/",
+  "userConfig": {
+    "promote_home": {
+      "type": "directory",
+      "title": "Campaigns directory",
+      "description": "Where promote artifacts (campaigns) are written. Resolution order: 1) $PROMOTE_HOME env var, 2) ./campaigns/ relative to cwd (default), 3) ${CLAUDE_PLUGIN_DATA}/campaigns/ fallback if cwd is not writable.",
+      "required": false
+    }
+  }
+}

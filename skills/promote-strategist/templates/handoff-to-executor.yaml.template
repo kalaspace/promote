@@ -1,0 +1,128 @@
+# handoff-to-executor.yaml — Contract between promote-strategist (Part 1) and promote-executor (Part 2)
+campaign_id: ""
+url: ""
+generated: "{ISO-date}"
+strategist_version: "0.1.0"
+
+product:
+  name: ""
+  one_liner: ""
+  jobs_to_be_done: []
+  unique_value_props: []
+  technical_primitive: ""
+
+icp:
+  primary:
+    description: ""
+    demographics: ""
+    psychographics: ""
+    pains: []
+    channels_used: []
+  secondary:
+    description: ""
+    demographics: ""
+    psychographics: ""
+    pains: []
+    channels_used: []
+
+offer:
+  current:
+    price: ""
+    terms: ""
+  hormozi_audit:
+    value_equation_score: 0  # 0-10
+    dimensions:
+      dream_outcome: 0
+      perceived_likelihood: 0
+      time_delay: 0
+      effort_sacrifice: 0
+    verdict: ""  # Grand Slam | Strong | Average | Weak | Commodity
+    recommendations: []
+
+awareness:
+  stage: 0  # 1-5
+  sophistication_level: 0  # 1-5
+  mass_desire: ""
+
+positioning:
+  one_sentence: ""
+  category_mode: ""  # Better | Different | Different+Category-creation
+  category_stage: ""  # cold-start | tipping | escape | mature | decline
+  contrarian_angle: ""
+  proof_assets_to_create: []
+
+growth:
+  bottleneck_fit: ""  # market-product | product-channel | channel-model | model-market
+  prescribed_action: ""
+  gtm_model: ""  # only if software ; A-E
+  unit_economics_gate: ""  # PASS | FAIL
+
+distribution:
+  primary_channels:
+    - channel: ""
+      rationale: ""
+      cadence: ""
+  secondary_channels: []
+  excluded:
+    - channel: ""
+      reason: ""
+  demand_split:
+    creation_pct: 0
+    capture_pct: 0
+  earned_media:
+    perennial_or_ephemeral: ""
+    tutc_chain:
+      tier_1: []
+      tier_2: []
+      tier_3: []
+      tier_4: []
+    first_100_fans: ""
+
+content:
+  pillars:
+    - name: ""
+      theme: ""
+      awareness_stage: 0
+      pct_of_calendar: 0
+      copy_framework: ""
+      example_topics: []
+  cadence_per_channel: {}  # { "x": "3/day", "linkedin": "5/week", ... }
+  voice:
+    tone: ""
+    do: []
+    dont: []
+
+geo:
+  audit_summary:
+    high_authority_mention: 0
+    statistical_density: 0
+    expert_quotes: 0
+    schema_markup: 0
+    extractable_formatting: 0
+    question_answering_structure: 0
+    freshness_signals: 0
+  weakest_levers: []
+  prescribed_actions: []
+  baseline_test_queries: []
+
+instrumentation:
+  nsm: ""
+  input_metrics: []
+  attribution_stack: {}  # { "last_click": [...], "multi_touch": [...], "self_reported": {...} }
+  kill_switch:
+    trigger: ""
+    response: ""
+
+goals:
+  primary_kpi: ""  # leads | sales | awareness | retention | expansion
+  90d_target: ""
+  kill_switch_conditions: []
+
+hypotheses_to_validate: []
+unknowns: []
+
+executor_handoff:
+  status: ""  # ready-for-executor | partial | escalated
+  completeness_score: 0  # /40
+  required_credentials_for_execution: []  # to be filled by executor
+  required_mcps_for_execution: []  # to be filled by executor

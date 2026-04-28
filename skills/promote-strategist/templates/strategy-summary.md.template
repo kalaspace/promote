@@ -1,0 +1,50 @@
+# Strategy Summary — {product_name}
+
+*Generated: {date}*
+*Campaign ID: {campaign_id}*
+
+---
+
+## 1. Diagnosis (Rumelt)
+
+{One paragraph: what is the central challenge this product must address. Concrete, not abstract.}
+
+## 2. Guiding Policy (Rumelt)
+
+{One paragraph: the chosen approach. What it focuses on. What it explicitly EXCLUDES.}
+
+## 3. Coherent Action (Rumelt)
+
+The 3-5 mutually-reinforcing actions:
+
+1. **Action 1**: 
+2. **Action 2**: 
+3. **Action 3**: 
+4. (optional) **Action 4**: 
+5. (optional) **Action 5**: 
+
+## 4. Primary KPI
+
+- **NSM**: {name + definition}
+- **90-day target**: {numeric}
+
+## 5. Top 3 risks
+
+1. 
+2. 
+3. 
+
+## 6. Hypotheses to validate
+
+(Things we don't know yet but the strategy depends on)
+
+- 
+- 
+- 
+
+## 7. Hand-off
+
+The detailed package is in `strategy/00` to `strategy/11`. The executor consumes `strategy/handoff-to-executor.yaml`.
+
+**Status**: {ready-for-executor | partial | escalated}
+**Completeness score**: {X}/40 ({pass%})
