@@ -114,22 +114,45 @@ For each Read step:
 
 **Time budget**: 15 delegations × ~30K tokens each = ~450K tokens for P3. Budget breach signal: if delegation cost exceeds 50K tokens, log and continue (don't abort).
 
-## P4 — PACKAGING
+## P4 — CONTENT PRODUCTION 14-DAY (NEW v1.1.0)
+
+For the **first 14 days** of the calendar (J0-J13), produce concrete posts using operator skills in PRODUCTION mode.
+
+**Steps**:
+
+1. **Build calendar skeleton** : 90 days × cadence per channel. For J14-J89, status='outline' with hypothesis. For J0-J13, prepare for production.
+2. **For each J0-J13 slot** (~14-42 slots depending on cadence) :
+   - Read slot row (date, channel, pillar, format, hypothesis).
+   - Read `strategy/operator-consultations/{operator-name}.md` for the channel's operator (created in P3.C). **CRITICAL** : without this, abort and require P3.C to be re-run.
+   - Identify operator/framework via routing table in `../../../references/content-production.md`.
+   - If operator skill: invoke in PRODUCTION mode with the 7 inputs (positioning + pillar + cadence + voice + slot.hypothesis + strategic_recommendations + anti_patterns).
+   - If framework: read framework + apply tactiques + generate.
+   - Save post to `campaigns/{slug}/content/posts/{YYYY-MM-DD}-{channel}-{pillar-short}.md` (template: `templates/post.md.template`).
+   - Update calendar row: status='concrete', body_path, generated_at.
+3. **Quality gates** per `../../../references/content-production.md` : title length 30-80 chars, body word-count appropriate, voice match (informal cover-the-name), no Pattern #11, single CTA, asset specs explicit.
+4. **If quality gate fails** : retry once with refined input. If fails again: mark `manual_review_needed` for that slot, continue.
+5. **Output** : 14-42 concrete posts in `campaigns/{slug}/content/posts/` + calendar updates.
+
+**Time budget** : ~30-50K tokens for content production 14d (cf. plan trade-offs Phase 7.J).
+
+**For J14-J89 (76 days remaining)** : NOT produced in P4. They are converted on demand by `promote-content-batcher` at user invocation (J+14, J+28, J+42, etc.).
+
+## P5 — PACKAGING (renamed from P4 in v1.0.0)
 
 **Steps**:
 
 1. Generate `strategy/00-product-brief.md` from intake/* artifacts (template: `templates/00-product-brief.md.template`).
 2. Generate `strategy/01-market-research.md` from research/* artifacts.
-3. P3 artifacts (02-10) are already in place from P3.
-4. Generate `strategy/11-content-calendar-90d.csv` based on P3 content pillars + cadence + channel mix. 90 days × cadence = N rows. Columns: date, channel, pillar, format, hypothesis, status (default: `draft`).
-5. Generate `strategy/strategy-summary.md` (2-page exec summary, template: `templates/strategy-summary.md.template`). Must contain Rumelt's 3 elements (diagnosis, guiding policy, coherent action) explicitly labeled.
-6. Generate `strategy/handoff-to-executor.yaml` (structured YAML, template: `templates/handoff-to-executor.yaml.template`).
-7. Run `completeness-checklist.md` (40 points). Compute pass percentage.
-8. **Decision**:
-   - `pass% >= 90%` → set `STATE.status = ready-for-executor`. Output completion summary to user.
-   - `90% > pass% >= 70%` → identify weakest phase, loop back to that phase, retry once.
-   - `pass% < 70%` → escalate, output detailed gap analysis, hand control to user.
-9. Output to user: a one-screen completion summary with link to `strategy-summary.md` for human review.
+3. P3 artifacts (02-10) are already in place from P3.A-G.
+4. Calendar `strategy/11-content-calendar-90d.csv` already filled with J0-J13 concrete (from P4) + J14-J89 outline. Columns: date, channel, pillar, format, title, body_outline, body_path, assets_path, status.
+5. Generate `strategy/strategy-summary.md` (2-page exec summary, template). Must contain Rumelt's 3 elements + tradeoffs résolus from P3.D.
+6. Generate `strategy/handoff-to-executor.yaml` with sections including content (concrete_posts_count, outlines_count, posts_directory, channel_distribution).
+7. Run `completeness-checklist.md` (40 points).
+8. **Decision** :
+   - `pass% >= 90%` → `STATE.status = ready-for-executor`.
+   - `90% > pass% >= 70%` → loop back to weakest phase, retry once.
+   - `pass% < 70%` → escalate.
+9. Output completion summary to user with paths to `strategy-summary.md` + `content/posts/` directory.
 
 ## Resume mode
 

@@ -38,11 +38,24 @@ The 3-5 mutually-reinforcing actions:
 
 (Things we don't know yet but the strategy depends on)
 
-- 
-- 
-- 
+-
+-
+-
 
-## 7. Hand-off
+## 7. Tradeoffs résolus — NEW v1.1.0
+
+(Inter-operator conflicts resolved during P3.D and how)
+
+- {conflict 1}: arbitrage = ...
+- {conflict 2}: arbitrage = ...
+
+## 8. Content production status — NEW v1.1.0
+
+- **Concrete posts (J0-J13)**: {N} posts produced in `content/posts/`
+- **Outlines (J14-J89)**: {M} slots in calendar, status='outline'
+- **Next batch**: invoke `/promote-content-batcher {campaign_id} --next-days 14` at J+14 to convert next batch.
+
+## 9. Hand-off
 
 The detailed package is in `strategy/00` to `strategy/11`. The executor consumes `strategy/handoff-to-executor.yaml`.
 

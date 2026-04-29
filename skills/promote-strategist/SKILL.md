@@ -6,7 +6,7 @@ description: |
 license: MIT
 metadata:
   author: François Neumann (promote orchestrator)
-  version: 0.1.0
+  version: 1.1.0
 ---
 
 # promote-strategist · Orchestrator (Sub-school A — Kitchen-sink)
@@ -69,7 +69,7 @@ The chosen path is recorded in `STATE.yaml.runtime_root` so subsequent invocatio
 
 Mode is set in the first message to the skill. If the user types `/promote-strategist <url> --autopilot`, autopilot. If `--resume`, resume. Default: guided.
 
-## Pipeline (5 phases) — the orchestrated work
+## Pipeline (5 phases, with P3 split in 7 sub-phases — v1.1.0) — the orchestrated work
 
 ### P0 — INTAKE (crawl and pre-fill)
 
@@ -134,46 +134,99 @@ The 5 batches are defined in `./references/intake-questions.md`. Summary:
 - `campaigns/{slug}/research/market-context.md` (category state — see `../../references/category-design.md`: cold-start / tipping / escape / mature / decline).
 - `campaigns/{slug}/research/icp-personas.md` (1-3 personas with demographic + psychographic + jobs-to-be-done).
 
-### P3 — STRATEGY SYNTHESIS (15 delegations)
+### P3 — STRATEGY SYNTHESIS (7 sub-phases A-G with two-pass orchestration)
 
-**This is the heart of the pipeline.** Execute the 15 steps in order. Each step has a defined input, output artifact, and quality gate.
+**This is the heart of the pipeline.** Two-pass orchestration: foundations → channel mix → operator strategic-consultation → mix refinement → consolidation → GEO/instrumentation consultation → Rumelt validator.
 
-The full delegation matrix is in `./references/delegation-matrix.md`. Sequence:
+The full delegation matrix is in `./references/delegation-matrix.md`. Sequence (v1.1.0) :
 
-| # | Action | Output artifact |
-|---|---|---|
-| a | Read `../../references/strategy-kernel.md` (Rumelt) — **validator AMONT** | (mental check; if no clear diagnosis emerges from P0+P1+P2, surface this BEFORE going further) |
-| b | Invoke `promote-jtbd-switch` with B1+B2 inputs | `strategy/02-jtbd-switch.md` |
-| c | Read `../../references/category-design.md` THEN invoke `promote-dunford-positioning` | `strategy/03-positioning.md` |
-| d | Invoke `promote-hormozi` with offer details from B3 | `strategy/04-offer-audit.md` (Value Equation + Core Four) |
-| e | Invoke `promote-schwartz` with audience awareness signals from B2+B4 | append to `strategy/04-offer-audit.md` (awareness stages section) |
-| f | Invoke `promote-ammar` for contrarian reframe | append to `strategy/03-positioning.md` (contrarian POV section) |
-| g | Invoke `promote-growth-four-fits` with all upstream inputs | `strategy/05-growth-fits.md` |
-| h | Invoke `promote-plg-design` (only if product is software) | append to `strategy/05-growth-fits.md` |
-| i | Read `../../references/psychology-canon.md` (Cialdini levers) | mental input for j |
-| j | Invoke `promote-x-mastery` for channel mix + content pillars + cadence | `strategy/06-distribution-plan.md`, `strategy/07-content-pillars.md`, `strategy/08-channel-strategy.md` |
-| k | Invoke `promote-mrbeast` ONLY IF channel mix retains video | append to `strategy/08-channel-strategy.md` (visual section) |
-| l | Invoke `promote-geo-optimization` | `strategy/09-geo-plan.md` |
-| m | Read `../../references/demand-gen.md` and `attribution-canon.md` THEN invoke `promote-paul-graham` for distribution philosophy | `strategy/10-instrumentation.md` (NSM + attribution stack) |
-| n | Invoke `promote-holiday` for earned-media + perennial vs ephemeral framing | append to `strategy/06-distribution-plan.md` (earned media section) |
-| o | Read `../../references/strategy-kernel.md` (Rumelt) — **validator AVAL** | check: are diagnosis-policy-action present? No fluff? No goals-as-strategy? No mistaking-features-for-strategy? If validator fails, loop back to weakest phase. |
+#### P3.A — Foundations (no channel-specific operators)
 
-**Caching rule**: each operator skill produces output once per campaign in P3. If `STATE.yaml.phase == P3-resume`, only re-invoke skills whose inputs have changed.
+- Read `../../references/strategy-kernel.md` (Rumelt — **validator AMONT**)
+- Invoke `promote-jtbd-switch` → `strategy/02-jtbd-switch.md`
+- Read `../../references/category-design.md` THEN `promote-dunford-positioning` → `strategy/03-positioning.md`
+- Invoke `promote-hormozi` (offer audit) → `strategy/04-offer-audit.md`
+- Invoke `promote-schwartz` (awareness stages) → append to `04-offer-audit.md`
+- Invoke `promote-ammar` (contrarian reframe) → append to `03-positioning.md`
+- Invoke `promote-growth-four-fits` → `strategy/05-growth-fits.md`
+- Invoke `promote-plg-design` (if software) → append to `05-growth-fits.md`
+- Read `../../references/psychology-canon.md` (Cialdini levers, mental input)
+- Invoke `promote-paul-graham` (distribution philosophy)
 
-**Max iterations on a single delegation**: 2. If output fails quality gate twice, escalate (mark as `manual_review_needed` in STATE and proceed without that artifact).
+#### P3.B — Channel Mix Initial Proposal
 
-### P4 — PACKAGING
+- Invoke `promote-channel-strategist` (NEW v1.1.0) — propose 4-7 primary + 1-3 secondary + 2-4 deferred + excluded.
+- Output: DRAFT `strategy/06-distribution-plan.md`.
+
+#### P3.C — Strategic Consultation (NEW — operators-as-strategists)
+
+For EACH channel in primary + secondary mix, invoke the corresponding operator skill in **STRATEGIC-CONSULTATION mode** (not production). Routing per `../../references/content-production.md` table.
+
+For each operator: produce structured output with `feasibility_score`, `strategic_recommendations`, `cadence_proposed`, `content_pillar_adjustments`, `prerequisites_or_blockers`, `anti_patterns`, `recommended_skip_or_defer`.
+
+Save EACH consultation to `strategy/operator-consultations/{operator-name}.md`. **CRITICAL** : these files are consumed by P4 production AND by `promote-content-batcher` later — they must be persisted.
+
+For channels routed to frameworks (no operator), read the framework directly.
+
+#### P3.D — Mix Refinement & Conflict Resolution
+
+`promote-channel-strategist` aggregates the consultations:
+- Channels with operator `feasibility_score` < 5 → moved to "deferred" with explicit prerequisites.
+- Conflicts inter-operator resolved via the matrix in `./references/delegation-matrix.md` (Welsh vs Gerhardt on LinkedIn, McGarry vs Lenny on newsletter, Faris vs Seufert on attribution, etc.).
+- Tradeoffs documented in `strategy/06-distribution-plan.md` "Tradeoffs résolus" section.
+
+#### P3.E — Pillars + Cadence + Voice Consolidation
+
+Strategist + channel-strategist consolidate `strategy/07-content-pillars.md` and `strategy/08-channel-strategy.md` integrating each operator's `content_pillar_adjustments`.
+
+#### P3.F — GEO + Instrumentation Strategic Consultation
+
+- If SEO/GEO retained: invoke `promote-indig-geo-seo` in strategic-consultation mode → `strategy/09-geo-plan.md`. Also reads framework `promote-geo-optimization` for the 7 levers.
+- If paid retained: invoke `promote-faris-meta-and-fundamentals` (paid fundamentals transverse) AND `promote-seufert-mobile-attribution` (post-iOS14) → `strategy/10-instrumentation.md` (attribution stack post-iOS14).
+- Invoke `promote-holiday` for earned-media + perennial framing → append to `06-distribution-plan.md`.
+
+#### P3.G — Rumelt validator AVAL
+
+Re-read `../../references/strategy-kernel.md`. Walk the 8-point checklist: diagnosis explicit, policy ONE direction (not three), policy excludes options, actions mutually reinforcing, no fluff, no goals-as-strategy, hypotheses-to-validate listed.
+
+If 1+ fail: identify weakest phase, loop back ONCE. If 2+ fail after loop: escalate to user with gap analysis.
+
+**Caching rule**: each operator skill produces output once per campaign. If `phase == P3-resume`, only re-invoke skills whose inputs have changed.
+
+**Max iterations on a single delegation**: 2. If output fails quality gate twice, escalate (`manual_review_needed`).
+
+### P4 — CONTENT PRODUCTION 14-DAY (NEW v1.1.0)
+
+For the **first 14 days** of the calendar (J0-J13), produce concrete posts using operator skills in PRODUCTION mode. Each slot becomes a real post (title + body + assets specs + posting metadata).
+
+**Action** (per slot in J0-J13):
+
+1. Read slot from calendar (date, channel, pillar, format, hypothesis).
+2. Read `strategy/operator-consultations/{operator}.md` for the channel's operator (from P3.C).
+3. Identify operator/framework via routing table in `../../references/content-production.md`.
+4. If operator skill: invoke in PRODUCTION mode with all 7 inputs (positioning + pillar + cadence + voice + slot.hypothesis + strategic_recommendations + anti_patterns).
+5. If framework: read framework + apply tactiques.
+6. Produced output: `campaigns/{slug}/content/posts/{YYYY-MM-DD}-{channel}-{pillar-short}.md` following `templates/post.md.template`.
+7. Update calendar: status='concrete', body_path, generated_at.
+
+For **J14-J89** (76 days remaining): keep status='outline' with hypothesis. They will be converted by `promote-content-batcher` on-demand at J+14, J+28, etc.
+
+**Quality gates**: per `../../references/content-production.md` (title length, body word-count, voice match, anti-patterns, single CTA, asset specs).
+
+**Coût estimé**: ~30-50K tokens.
+
+### P5 — PACKAGING (renamed from P4 in v1.0.0)
 
 **Action**:
 
 1. Generate `strategy/00-product-brief.md` (2-page summary of P0+P1).
 2. Generate `strategy/01-market-research.md` (consolidated from P2).
-3. All P3 artifacts already exist (b through n above).
-4. Generate `strategy/11-content-calendar-90d.csv` (90 days of planned content slots, 1 row per slot).
-5. Generate `strategy/strategy-summary.md` (2-page exec summary covering: diagnosis, guiding policy, coherent action, primary KPI, top 3 risks, hypotheses to validate).
-6. Generate `strategy/handoff-to-executor.yaml` (structured contract for `promote-executor`).
+3. All P3 artifacts already exist (P3.A through P3.G).
+4. Generate `strategy/11-content-calendar-90d.csv` (90 days; J0-J13 already concrete from P4, J14-J89 outline).
+5. Generate `strategy/strategy-summary.md` (2-page exec summary: diagnosis, guiding policy, coherent action, primary KPI, top 3 risks, hypotheses to validate, tradeoffs résolus).
+6. Generate `strategy/handoff-to-executor.yaml` with sections: product, icp, offer, awareness, positioning, growth, distribution (channel mix + tradeoffs), content (concrete_posts_count, outlines_count, posts_directory, channel_distribution), geo, instrumentation, goals, hypotheses_to_validate, unknowns, executor_handoff.
 7. Run **completeness checklist** (see `./references/completeness-checklist.md`): 40 points. If <90% pass, identify weak phase and loop back.
-8. If 100% pass, set `STATE.yaml.status = ready-for-executor`.
+8. If ≥90% pass, set `STATE.yaml.status = ready-for-executor`.
 
 ## Output Structure (the deliverable)
 

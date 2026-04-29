@@ -5,15 +5,15 @@
     "email": "francois.neumann@flex.eu"
   },
   "metadata": {
-    "description": "Promote: 20-skill stack for end-to-end product promotion strategy. Takes a URL, asks the right questions about the product, produces a publish-ready strategy package.",
-    "version": "1.0.0"
+    "description": "Promote: 39-skill stack for end-to-end product promotion strategy with two-pass orchestration. Channel-strategist proposes channels actively (organic + paid). 19 world-class operator skills (Welsh, McGarry, Lenny, Ferriss, Robinson, Isenberg, Brock Johnson, Indig, Hormozi-shortform, Gerhardt, Faris, Wilcox, Mike Ryan, Vallaeys, Seufert, Sanchez, Curry + Hormozi/MrBeast/x-mastery existing) consulted in strategic mode, then production mode for 14 days of concrete content. promote-content-batcher converts the 76 remaining outlines on demand.",
+    "version": "1.1.0"
   },
   "plugins": [
     {
       "name": "promote",
       "source": "./",
-      "description": "End-to-end promotion stack: 1 strategist orchestrator + 11 operator personas (Hormozi, Schwartz, Cialdini, Voss, Holiday, Ammar, Paul Graham, X-Mastery, MrBeast, Steve Jobs, customer-research) + 6 framework skills (JTBD-Switch, Dunford-Positioning, Four-Fits, PLG-Design, GEO-Optimization, AI-Content-Pipeline) + 1 utility (huashu-nuwa) + 11 reference docs (Rumelt strategy kernel, Cialdini psychology, JTBD, GEO levers, growth loops, North Star, demand-gen, attribution, network effects, copy frameworks, skill-grammar).",
-      "version": "1.0.0",
+      "description": "v1.1.0 — 39 skills (19 operators + 6 framework skills + 12 personas + 2 orchestrators) + 20 references for end-to-end promotion strategy. Coverage: organic (X, LinkedIn, Newsletter, Substack, Founder, SEO/GEO, TikTok/Reels/Shorts, Instagram, Discord, Podcast, Outbound, YouTube long-form, Reddit, HN/launches, Facebook, Pinterest organic, emerging) + paid (Meta, Google PMax, Google Search/PPC, Mobile/iOS14, TikTok/Snapchat, Amazon/YouTube, LinkedIn Ads, X+Reddit+Pinterest paid, emerging paid).",
+      "version": "1.1.0",
       "category": "marketing"
     }
   ]

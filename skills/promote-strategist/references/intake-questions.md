@@ -187,15 +187,22 @@ For each question : the **intent** (what we'll use it for), the **skip condition
 
 - **Intent**: voice fingerprint for content production.
 
-### Q5.5 — Existing channels
-> *"What social/community channels already exist for this product or for the founder? List them with rough audience size."*
+### Q5.5 — Existing channels + Channel exploration
+> *"(A) What social/community channels already exist for this product or for the founder? List them with rough audience size. (B) Are there channels you'd LIKE to explore but haven't yet? (E.g., email list, YouTube, Discord, TikTok, Substack, podcast guesting, paid ads on Meta/Google, etc.) — even if no infrastructure yet."*
 
-- **Intent**: channel mix decision (re-use vs build).
+- **Intent**: channel mix decision (re-use vs build vs new-to-test).
+- **Rationale if pushed**: We want to know both what's working AND what's dormant. The strategist will recommend which sleeping channels to test, plus PROPOSE channels you didn't think of via `promote-channel-strategist`.
 
 ### Q5.6 — Hard 'no' channels
 > *"Are there channels you refuse to use? (E.g., 'never TikTok', 'no LinkedIn'.) Why?"*
 
 - **Intent**: respect the constraint; document the reason for hand-off to executor.
+
+### Q5.7 — Product type (NEW v1.1.0)
+> *"Type de produit principal: B2B SaaS / B2C SaaS / DTC e-commerce / digital course / livre / service / mobile app / autre? Plus précis = mieux."*
+
+- **Intent**: guide channel-strategist routing. B2B SaaS = LinkedIn/email/podcast lourd ; DTC = Meta/TikTok/Amazon paid ; mobile app = Seufert + UA-specific ; livre = Substack + Reddit + Pinterest.
+- **Skip if**: Q1.1 et Q2.1 ont déjà clarifié.
 
 ---
 

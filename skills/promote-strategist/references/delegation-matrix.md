@@ -1,8 +1,108 @@
-# Delegation Matrix — verbatim invocation prompts for P3
-
-For each of the 15 P3 steps, this file gives the exact prompt to use, the inputs to inject, and the expected output artifact.
+# Delegation Matrix — verbatim invocation prompts for P3 (v1.1.0)
 
 The strategist constructs the prompt by template-filling from `STATE.known_facts` and prior artifacts.
+
+---
+
+## v1.1.0 — Two-pass orchestration with cascade
+
+**P3 is now split in 7 sub-phases A-G** (see SKILL.md). This file covers each sub-phase below. Every operator skill supports two modes:
+
+- **Mode CONSULTATION** (used in P3.C and P3.F): operator gives strategic verdict, NOT content production. Output structured: `feasibility_score`, `strategic_recommendations`, `cadence_proposed`, `content_pillar_adjustments`, `prerequisites_or_blockers`, `anti_patterns`, `recommended_skip_or_defer`.
+- **Mode PRODUCTION** (used in P4 Content Production): operator generates concrete content (titles, bodies, assets specs).
+
+Cascading routing per channel — see `../../../references/content-production.md` for the complete table (channel → operator/framework). Excerpt below:
+
+```
+ORGANIC operators (10):
+  X/Twitter             → promote-x-mastery
+  LinkedIn              → promote-welsh-linkedin
+  YouTube long-form     → promote-mrbeast
+  YouTube/TikTok/Reels  → promote-hormozi-shortform
+  Newsletter (volume)   → promote-mcgarry-newsletter
+  Substack premium      → promote-lenny-substack
+  Founder cross-channel → promote-gerhardt-founder
+  Podcast               → promote-ferriss-podcast
+  Cold/Warm B2B         → promote-robinson-outbound
+  Discord/Community     → promote-isenberg-community
+  Instagram organic     → promote-johnson-instagram
+  SEO/GEO               → promote-indig-geo-seo
+
+PAID operators (7):
+  Meta Ads + paid fundamentals → promote-faris-meta-and-fundamentals
+  LinkedIn Ads          → promote-wilcox-linkedin-ads
+  Google PMax           → promote-ryan-pmax
+  Google Search/PPC     → promote-vallaeys-google
+  Mobile/iOS14 attribution → promote-seufert-mobile-attribution
+  TikTok/Snapchat       → promote-sanchez-tiktok
+  Amazon/YouTube Ads    → promote-curry-amazon-youtube
+
+FRAMEWORKS (8) — read directly, no consultation:
+  Reddit, HN+launches, Facebook, Pinterest-organic, Emerging-platforms,
+  Paid-X-Reddit-Pinterest, Paid-emerging-2026, Paid-other-niches.
+```
+
+**Strategic-consultation invocation prompt template (reused for every operator)**:
+
+```
+Invoke promote-{operator} in STRATEGIC-CONSULTATION mode (not production).
+
+Context:
+- Product brief : {00-product-brief.md résumé}
+- ICP : {STATE.icp_real}
+- JTBD : {02-jtbd-switch.md résumé}
+- Positioning : {03-positioning.md résumé + Ammar contrarian}
+- Awareness stage : {04-offer-audit.md awareness section}
+- Goal 90j : {STATE.primary_goal}
+- Budget/effort constraint : {STATE.budget_constraints}
+
+Question: Given the above, is {channel} a good fit for this campaign?
+
+Output structured (Markdown):
+1. feasibility_score (1-10)
+2. strategic_recommendations (3-5 bullets)
+3. cadence_proposed (concrete: e.g., "5x/sem long-form + 1 carrousel/sem")
+4. content_pillar_adjustments (how to adapt pillars for this channel)
+5. prerequisites_or_blockers (what must exist before posting)
+6. anti_patterns (do-not-do for this product/audience)
+7. recommended_skip_or_defer (if feasibility < 5, why)
+```
+
+**Save consultation output** to `campaigns/{slug}/strategy/operator-consultations/{operator-name}.md`. Critical for P4 production AND content-batcher.
+
+## Conflict Resolution Matrix (when 2+ operators contradict)
+
+| Conflict | Heuristique d'arbitrage |
+|---|---|
+| Welsh (LinkedIn organic) vs Gerhardt (founder cross-channel) on LinkedIn cadence | Welsh on LinkedIn-pure tactics. Gerhardt on cross-channel founder voice. Both apply (different layers). |
+| McGarry (volume newsletter) vs Lenny (premium Substack) | Goal-driven: volume + paid acq → McGarry. Premium niche + paid sub → Lenny. |
+| Faris (Triple Whale + Geo Lift attribution) vs Seufert (Bayesian MMM post-iOS14) | Both compatible: short-term TW+Geo (Faris), long-term MMM (Seufert). Combine. |
+| Indig (stats density GEO) vs Schwartz (narrative awareness stage) on pillar structure | Combine: narrative scaffold (Schwartz) with stats embedded (Indig). |
+| Hormozi-shortform (organic Reels) vs Sanchez (TikTok paid) | Organic = Hormozi-shortform. Paid = Sanchez. Different campaigns. |
+| Wilcox (LinkedIn Ads $$$) vs Welsh (LinkedIn organic) | Welsh = organic content. Wilcox = paid amplification. Sister skills. |
+
+**Generic principles** (when matrix doesn't cover):
+1. Channel-specific operator > generalist on its channel.
+2. Operator with documented 2024-26 results > legacy.
+3. Operator operating the channel in 2026 > theoretician.
+
+Document each arbitrage in `strategy/06-distribution-plan.md` "Tradeoffs résolus" section for transparency.
+
+---
+
+## Detailed sub-phase delegations
+
+The legacy step-a-to-step-o sequence below maps to the new sub-phases as follows:
+
+- **P3.A Foundations** = Steps a, b, c (positioning), d (Hormozi offer), e (Schwartz), f (Ammar), g (Four-Fits), h (PLG), i (psychology read), n (PG distribution philosophy).
+- **P3.B Channel Mix Initial** = NEW invocation of `promote-channel-strategist`.
+- **P3.C Strategic Consultation** = NEW cascade per primary/secondary channel.
+- **P3.D Mix Refinement** = `promote-channel-strategist` arbitrage.
+- **P3.E Pillars consolidation** = synthesis of `content_pillar_adjustments`.
+- **P3.F GEO + Instrumentation consultation** = Steps l (Indig consultation), m (Faris + Seufert consultation), n (Holiday).
+- **P3.G Rumelt aval** = Step o.
+
+Steps j and k from v1.0.0 (single x-mastery + mrbeast invocations) are SUPERSEDED by the cascade in P3.C/D.
 
 ---
 

@@ -2,6 +2,112 @@
 
 All notable changes to promote (the `promote` plugin).
 
+## [1.1.0] — 2026-04-29
+
+Major release based on real-test feedback (v1.0.0 deployed and tested on a real product). Two structural gaps were identified:
+1. **Outputs not exploitable for an executor agent** — calendar was a skeleton (status=draft slots without title/body/asset specs).
+2. **Channel myopia** — the strategy only proposed channels the user explicitly mentioned (no email, no podcast, no founder-led, no GEO/SEO).
+
+v1.1.0 fixes both via two-pass orchestration (consultation + production), 17 new world-class operator skills, 8 new tactical frameworks, 2 new orchestrator skills, and a refactored P3 strategy synthesis pipeline.
+
+### Added — 17 new operator skills (sub-school D, persona-incarnée)
+
+**10 new organic operators** (5-7 hand-picked based on exhaustive research) :
+- `promote-welsh-linkedin` (Justin Welsh — LinkedIn B2B, $5M+ solo) — 448 lines
+- `promote-mcgarry-newsletter` (Matt McGarry — Newsletter paid acq, $20M+ tracked) — 529 lines
+- `promote-gerhardt-founder` (Dave Gerhardt — Founder-led B2B cross-channel) — 306 lines
+- `promote-indig-geo-seo` (Kevin Indig — SEO/GEO 2026, ex-Shopify Director) — 486 lines
+- `promote-hormozi-shortform` (Alex Hormozi — TikTok/Reels/Shorts, $100M Leads) — 391 lines
+- `promote-lenny-substack` (Lenny Rachitsky — Substack premium, $1.5M+ ARR) — 530 lines
+- `promote-ferriss-podcast` (Tim Ferriss — Podcast host method, 1B+ downloads) — 727 lines
+- `promote-robinson-outbound` (Adam Robinson — Cold/Warm B2B, RB2B $5M ARR) — 540 lines
+- `promote-isenberg-community` (Greg Isenberg — Discord/community, Late Checkout $10M/yr) — 538 lines
+- `promote-johnson-instagram` (Brock Johnson — Instagram organic, 892K followers + 45K students) — 399 lines
+
+**7 new paid operators** :
+- `promote-faris-meta-and-fundamentals` (Andrew Faris — Meta Ads + paid fundamentals transverse, $100M+ géré) — 587 lines
+- `promote-wilcox-linkedin-ads` (AJ Wilcox — LinkedIn Ads, **$150-200M LinkedIn ad spend documented**) — 497 lines
+- `promote-ryan-pmax` (Mike Ryan — Google PMax/Shopping, "PMax Whisperer", €500M+/an) — 558 lines
+- `promote-vallaeys-google` (Frederick Vallaeys — Google Search/PPC + AI Max, ex-Google insider) — 530 lines
+- `promote-seufert-mobile-attribution` (Eric Seufert — Mobile UA + post-iOS14 attribution) — 573 lines
+- `promote-sanchez-tiktok` (Savannah Sanchez — TikTok/Snapchat Ads, 200+ ads/sem, 50+ clients) — 453 lines
+- `promote-curry-amazon-youtube` (Brett Curry — Amazon Ads + YouTube Ads, 100+ DTC brands) — 515 lines
+
+All 17 operators support **dual mode** : Mode CONSULTATION (used in P3.C strategist) + Mode PRODUCTION (used in P4 + content-batcher). Pattern compliance ≥14/15 each.
+
+### Added — 2 new orchestrator skills
+
+- `promote-channel-strategist` (sub-école A mini) — Proposes channels ACTIVELY (beyond user-mentioned), invokes operators in strategic-consultation mode, arbitrates inter-operator conflicts, produces final mix with primary/secondary/deferred/excluded categorization. Solves the v1.0.0 channel myopia gap.
+- `promote-content-batcher` (sub-école C scoped surgeon) — Converts outline-status calendar slots into concrete posts on demand (J+14, J+28, J+42, etc.). Re-reads operator strategic consultations from P3.C. Idempotent.
+
+### Added — 8 new framework references
+
+**5 organic frameworks** :
+- `references/channel-reddit.md` (Reddit organic — tactical playbook)
+- `references/channel-hn-and-launches.md` (HN + Product Hunt + Indie Hackers)
+- `references/channel-facebook.md` (Facebook organic — light, declining channel)
+- `references/channel-pinterest-organic.md` (Pinterest organic — niche verticals)
+- `references/channel-emerging-platforms-2026.md` (Threads + Bluesky + Mastodon + WhatsApp + Telegram)
+
+**3 paid frameworks** :
+- `references/channel-paid-x-reddit-pinterest.md` (X Ads + Reddit Ads + Pinterest Ads — paid niches grouped)
+- `references/channel-paid-emerging-2026.md` (CTV/OTT + TikTok Shop + Walmart Connect + DOOH — WAIT v1.2 operators)
+- `references/channel-paid-other-niches.md` (Affiliate + B2B sponsorships + Podcast Ads + Email Ads sponsorships)
+
+### Added — Support files
+
+- `references/content-production.md` — factorisation logique production multi-canal (channel→operator routing table, post format, quality gates). Consumed by P4 strategist + content-batcher.
+- `templates/post.md.template` — standard format for produced posts.
+
+### Changed — promote-strategist refactored (v1.0.0 → v1.1.0)
+
+**P3 Strategy Synthesis** split in 7 sub-phases :
+- **P3.A** — Foundations (Rumelt, JTBD, Positioning, Hormozi, Schwartz, Ammar, Four-Fits, PLG, Cialdini-read, Paul Graham)
+- **P3.B** — Channel Mix Initial (NEW : `promote-channel-strategist` proposes mix)
+- **P3.C** — Strategic Consultation (NEW : invokes each operator in consultation mode, saves to `strategy/operator-consultations/`)
+- **P3.D** — Mix Refinement & Conflict Resolution (NEW : channel-strategist arbitrates)
+- **P3.E** — Pillars + Cadence + Voice consolidation
+- **P3.F** — GEO + Instrumentation strategic consultation (Indig, Faris, Seufert)
+- **P3.G** — Rumelt validator AVAL
+
+**P4 NEW : Content Production 14-day** — produces concrete posts for J0-J13 using operators in PRODUCTION mode.
+
+**P5 (renamed from P4 in v1.0.0)** — Packaging.
+
+**Intake** : Q5.5 enriched ("what's existing AND what to explore"), Q5.7 added (product type).
+
+**Delegation matrix** : v1.0.0 single-cascade replaced by sub-phase-routed cascade (per `references/content-production.md`). Conflict resolution matrix documented.
+
+**Templates updated** :
+- `STATE.yaml.template` : new fields `concrete_posts_count`, `outlines_count`, `posts_directory`, `operator_consultations_completed`.
+- `11-content-calendar-90d.csv.template` : columns now `date,channel,pillar,format,title,body_outline,body_path,assets_path,status` (status=outline|concrete|posted|archived).
+- `handoff-to-executor.yaml.template` : new sections `content`, `channel_distribution`, `operator_consultations`.
+- `06-distribution-plan.md.template` : new sections "Channels considered but DEFERRED", "Tradeoffs résolus".
+- `strategy-summary.md.template` : new sections "Tradeoffs résolus", "Content production status".
+
+### Volume
+
+- **Skills total** : 39 (20 v1.0.0 + 17 new operators + 2 new orchestrators)
+- **References total** : 20 (11 v1.0.0 + 8 new framework refs + 1 content-production.md)
+- **Lines of new SKILL.md content** : ~8,500 lines across 19 new skills
+
+### Notes
+
+- All v1.1.0 operators have explicit `feasibility_score`, `strategic_recommendations`, `cadence_proposed`, `content_pillar_adjustments`, `prerequisites_or_blockers`, `anti_patterns`, `recommended_skip_or_defer` schemas in their CONSULTATION mode output. This is the contract that makes the orchestration deterministic.
+- Audit autonomy : 0 absolute paths in operator skills, 0 non-prefixed cross-skill invocations.
+- Cost per campaign : ~80-120K tokens (vs 30-50K v1.0.0). Justification : transformation from "skeleton generator" to "multi-expert consultant".
+- Part 2 (`promote-executor`) remains in development. v1.1.0 makes the executor less urgent because content batcher + concrete content production cover most of what was previously deferred.
+
+### Migration from v1.0.0
+
+Existing campaigns continue to work. New campaigns use the v1.1.0 pipeline automatically. To upgrade an existing campaign (re-run with new operators consulted):
+1. Re-run the strategist with `--resume` mode.
+2. The strategist will detect missing P3.C consultations and trigger them.
+3. P4 will produce concrete content for J0-J13.
+4. `promote-content-batcher` can then be invoked at J+14 to convert outlines.
+
+---
+
 ## [1.0.0] — 2026-04-28
 
 First public release. Part 1 (`promote-strategist`) is feature-complete and packaged as a Claude Code plugin.

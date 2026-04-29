@@ -2,16 +2,39 @@
 
 ## Channel mix overview
 
-### Primary channels (rank-ordered)
-1. {channel} — rationale
-2. {channel} — rationale
-3. {channel} — rationale
+### Primary channels (rank-ordered, 3-5)
+1. {channel} — composite score {X}/40 — operator {operator-skill} — feasibility {Y}/10 — rationale
+2. {channel} — ...
+3. {channel} — ...
 
-### Secondary channels (test/maintain)
-- {channel}
+### Secondary channels (test à J+30)
+- {channel} — composite {X}, hypothesis to test, kill-switch criteria
 
-### Excluded channels
-- {channel}: {reason}
+### Channels considered but DEFERRED to Phase 2 (J+45-60+) — NEW v1.1.0
+- {channel} — *prerequisites needed: "...". Test if primary plateau.*
+
+### Channels EXCLUDED
+- {channel}: {reason concrete}
+
+## Tradeoffs résolus (conflit inter-operator) — NEW v1.1.0
+
+- {Welsh vs Gerhardt on LinkedIn}: arbitrage = ...
+- {McGarry vs Lenny on newsletter}: arbitrage = ...
+
+## Operator consultations summary — NEW v1.1.0
+
+| Channel | Operator/Framework | Feasibility (1-10) | Cadence | Top recommendation |
+|---|---|---|---|---|
+| ... | ... | ... | ... | ... |
+
+Detailed consultations: see `strategy/operator-consultations/{operator}.md`.
+
+## Phased roadmap — NEW v1.1.0
+
+- **J0** : launch primary channels (prerequisites met).
+- **J+30** : test secondary, complete prerequisites for one deferred channel.
+- **J+60** : promote successful secondary to primary, retire failures.
+- **J+90** : checkpoint with content-batcher progress + KPIs.
 
 ## Demand creation vs demand capture split
 

@@ -1,8 +1,76 @@
 # Strategy Package Schema
 
-Structured specification of the deliverable produced in P4. Every artifact in `campaigns/{slug}/strategy/` follows this schema.
+Structured specification of the deliverable produced in P5 (formerly P4 in v1.0.0). Every artifact in `campaigns/{slug}/strategy/` follows this schema.
 
 The schema is the **contract** between `promote-strategist` (Part 1) and `promote-executor` (Part 2). Changes here require coordination with the executor's reading logic.
+
+---
+
+## v1.1.0 — Schema additions (NEW)
+
+### `strategy/operator-consultations/` (NEW folder)
+
+Per-operator strategic consultation files produced in P3.C. Format:
+
+```markdown
+# Strategic Consultation — {operator-name} for {campaign-id}
+
+**Channel covered** : {channel-name}
+**Generated** : {ISO date}
+**Mode** : strategic-consultation (NOT production)
+
+## feasibility_score
+{1-10}
+
+## strategic_recommendations
+- {3-5 bullets ajustements clés}
+
+## cadence_proposed
+{concrete cadence : "5x/sem long-form + 1 carrousel/sem"}
+
+## content_pillar_adjustments
+{how to adapt the strategist's pillars for this channel}
+
+## prerequisites_or_blockers
+- {prerequisite 1}
+- {prerequisite 2}
+
+## anti_patterns
+- {anti-pattern 1}
+- {anti-pattern 2}
+
+## recommended_skip_or_defer
+{if feasibility < 5: explanation. Else: "retain"}
+```
+
+These files are CRITICAL — consumed by P4 Content Production AND by `promote-content-batcher` later for outline → concrete conversion. Without them, content generation falls back to generic LLM voice.
+
+### File 06 — `06-distribution-plan.md` (UPDATED v1.1.0)
+
+Now includes "Channels considered but DEFERRED" section + "Tradeoffs résolus" section. See updated schema below in File 06 details.
+
+### File 11 — `11-content-calendar-90d.csv` (UPDATED v1.1.0)
+
+**Old schema (v1.0.0)** : `date,channel,pillar,format,hypothesis,status`
+**New schema (v1.1.0)** : `date,channel,pillar,format,title,body_outline,body_path,assets_path,status`
+
+**Status values v1.1.0** : `outline` (default for J14-J89) | `concrete` (J0-J13 from P4, or batched from content-batcher) | `posted` (set by executor) | `archived`.
+
+### File 12 — `strategy-summary.md` (UPDATED v1.1.0)
+
+Now includes "Tradeoffs résolus" section (inter-operator conflicts + resolution).
+
+### File 13 — `handoff-to-executor.yaml` (UPDATED v1.1.0)
+
+New sections : `content` (concrete_posts_count, outlines_count, posts_directory), `channel_distribution` (primary/secondary/deferred/excluded with operator routing), `operator_consultations` (consultation paths + conflicts resolved).
+
+### `content/posts/` (NEW folder)
+
+Concrete posts produced in P4 + batched. Format per post: see `templates/post.md.template`. Filename: `{YYYY-MM-DD}-{channel}-{pillar-short}.md`.
+
+### `content/batch-reports/` (NEW folder)
+
+Reports from `promote-content-batcher` invocations. Format: `{YYYY-MM-DD-batch-report.md}` per batch.
 
 ---
 

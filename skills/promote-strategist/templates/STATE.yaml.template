@@ -3,7 +3,7 @@ campaign_id: "{campaign_id}"
 url: "{url}"
 runtime_root: "{absolute_path_resolved_in_P0_step_1}"  # $PROMOTE_HOME | <cwd>/campaigns | ${CLAUDE_PLUGIN_DATA}/campaigns
 mode: "guided"  # guided | autopilot | resume
-phase: "P0"     # P0 | P1 | P2 | P3 | P4 | ready-for-executor | manual_review_needed
+phase: "P0"     # P0 | P1 | P2 | P3.A | P3.B | P3.C | P3.D | P3.E | P3.F | P3.G | P4 | P5 | ready-for-executor | manual_review_needed
 created: "{ISO-date}"
 last_updated: "{ISO-date}"
 
@@ -40,8 +40,14 @@ unknowns: []          # list of fields user said "don't know"
 hypotheses_to_validate: []  # surface in strategy-summary
 
 batches_completed: []  # ["B1", "B2", ...]
-delegations_completed: []  # ["b", "c", "d", ...]
+delegations_completed: []  # ["P3.A.jtbd", "P3.B.channel-strategist", "P3.C.welsh-linkedin", ...]
+operator_consultations_completed: []  # ["promote-welsh-linkedin", "promote-mcgarry-newsletter", ...]
 warnings: []           # ["no_clear_diagnosis_from_inputs", "competitor_research_thin", ...]
+
+# Content production tracking (v1.1.0)
+concrete_posts_count: 0   # filled in P4 (target: 14 days × cadence)
+outlines_count: 0         # filled in P5 (J14-J89)
+posts_directory: "content/posts/"
 
 artifact_status:
   intake/url-crawl.md: "pending"  # pending | done | failed
@@ -67,6 +73,8 @@ artifact_status:
   strategy/11-content-calendar-90d.csv: "pending"
   strategy/strategy-summary.md: "pending"
   strategy/handoff-to-executor.yaml: "pending"
+  strategy/operator-consultations/: "pending"  # folder, P3.C v1.1.0
+  content/posts/: "pending"  # folder, P4 v1.1.0
 
-completeness_score: 0  # /40, set at P4
+completeness_score: 0  # /40, set at P5
 status: "active"       # active | ready-for-executor | escalated

@@ -1,0 +1,40 @@
+---
+slug: {YYYY-MM-DD}-{channel}-{pillar-short}
+date: {YYYY-MM-DD}
+channel: {channel}
+pillar: {pillar-name}
+format: {long-form | thread | carousel | reel | short | email | etc.}
+operator_or_framework: {promote-X or references/channel-X.md}
+generated_at: {ISO date}
+status: draft  # draft → approved → posted
+---
+
+# {Title (30-80 chars, hook)}
+
+## Hypothesis (from strategist calendar)
+
+{the original slot.hypothesis from the calendar — what this post is testing}
+
+## Body
+
+{Full content : 200-1500 mots selon canal/format}
+
+## Assets needed (briefs, not generated)
+
+- {asset 1 brief: type, dimensions, content direction}
+- {asset 2 brief}
+
+## Posting metadata
+
+- **Best time** : {YYYY-MM-DD HH:MM TZ}
+- **Hashtags** : {if applicable}
+- **CTA** : {explicit single call-to-action}
+- **Cross-post** : {if multi-channel adaptation needed}
+- **Tracking UTM** : {if applicable}
+
+## Operator notes
+
+- Anti-patterns checked : {Pattern #11, channel-specific}
+- Signature moves used : {1 max per post}
+- Voice match score : {informal cover-the-name test}
+- Quality gates passed : {Title length, Body word-count, Voice, Anti-patterns, Single CTA, Asset specs}

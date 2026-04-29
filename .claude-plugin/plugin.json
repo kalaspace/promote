@@ -1,7 +1,7 @@
 {
   "name": "promote",
-  "version": "1.0.0",
-  "description": "End-to-end product promotion strategy. Give /promote-strategist a URL, get a complete strategy package: positioning, offer audit, growth fits, channel mix, content pillars, GEO plan, instrumentation, 90-day calendar, and a YAML hand-off contract for the executor (Part 2, in development).",
+  "version": "1.1.0",
+  "description": "End-to-end product promotion strategy with two-pass orchestration (operator consultation + production). Give /promote-strategist a URL: it asks about the product, proposes channels actively (beyond what you mentioned), invokes 19 world-class operator skills in strategic-consultation mode, produces 14 days of concrete content + 76 days of outlines. Use /promote-content-batcher to convert outlines to concrete posts on demand.",
   "author": {
     "name": "François Neumann"
   },

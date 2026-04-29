@@ -121,8 +121,28 @@ goals:
 hypotheses_to_validate: []
 unknowns: []
 
+# Content production tracking (NEW v1.1.0)
+content:
+  concrete_posts_count: 0   # produced in P4 Content Production 14-day
+  outlines_count: 0         # remaining J14-J89, to be converted by promote-content-batcher on demand
+  posts_directory: "content/posts/"
+  batch_reports_directory: "content/batch-reports/"
+
+# Channel distribution mapping (NEW v1.1.0)
+channel_distribution:
+  primary: []     # [{channel, operator_or_framework, cadence, feasibility_score, consultation_path}]
+  secondary: []   # [{channel, ..., test_at: "J+30"}]
+  deferred: []    # [{channel, prerequisites, test_at}]
+  excluded: []    # [{channel, reason}]
+
+# Operator consultations references (NEW v1.1.0)
+operator_consultations:
+  consultation_directory: "strategy/operator-consultations/"
+  consultations_completed: []  # ["promote-welsh-linkedin", "promote-mcgarry-newsletter", ...]
+  conflicts_resolved: []       # documented in 06-distribution-plan.md "Tradeoffs résolus"
+
 executor_handoff:
   status: ""  # ready-for-executor | partial | escalated
   completeness_score: 0  # /40
-  required_credentials_for_execution: []  # to be filled by executor
+  required_credentials_for_execution: []  # to be filled by executor (per channel_distribution.primary)
   required_mcps_for_execution: []  # to be filled by executor
