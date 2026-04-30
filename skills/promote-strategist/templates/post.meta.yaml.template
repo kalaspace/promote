@@ -1,0 +1,103 @@
+# Post metadata — full audit trail (v1.3.0)
+# Adjacent file to content/posts/{slug}.md (which is pure content only).
+# Read by promote-executor for posting + analytics.
+# Read by audit/observability tools.
+
+post_id: {YYYY-MM-DD-channel-pillar-short}
+slug: {YYYY-MM-DD-channel-pillar-short}
+
+# --- Production trace ---
+generated_at: {ISO date}
+operator_used: {prompts/operators/{name}/prompt.md or framework reference path}
+operator_mode: production
+generated_by_phase: {P4 | P4-batcher}
+production_subagent_id: {task-id-if-applicable}
+
+# --- Strategy linkage ---
+campaign_slug: {slug}
+slot_hypothesis: {original slot.hypothesis from calendar}
+pillar_full_name: {full pillar name from 07-content-pillars.md}
+schwartz_awareness_stage: {unaware | problem-aware | solution-aware | product-aware | most-aware}
+content_format_taxonomy: {format detail}
+atomization_variant_used: {one of: hook-shock | dimanche-doute | corbeille | contrast-reader | failure-confession | objection-killer | sub-frame-zoom | case-micro | contrarian-reverse | micro-anecdote-from-pillar}
+
+# --- Asset specs (briefed, not generated) ---
+asset_specs:
+  image_brief: |
+    {Type, dimensions, content direction, color palette, font hints if relevant}
+  alt_text: "{alt text for accessibility}"
+  designer_notes: |
+    {execution hints for the human or AI designer}
+
+# --- Posting metadata (for promote-executor in Part 2) ---
+posting_metadata:
+  best_time_iso: {YYYY-MM-DDTHH:MM:SS+TZ}
+  best_time_human: "{human-readable time, e.g., Tuesday 8h CET}"
+  hashtags: []
+  cta_target_url: "{full URL incl. UTM params}"
+  cta_text_in_body: "{the CTA phrasing used in the post body}"
+  cross_post: {null or array of channels for cross-posting with adapted format}
+  utm_params: "{utm_source=...&utm_medium=...&utm_campaign=...}"
+
+# --- Quality gate audit (full trace, 8 gates v1.3.0) ---
+quality_gates:
+  gate_1_form:
+    pass: {true | false}
+    title_chars: {N}
+    body_words: {N}
+    placeholders_found: {N}  # MUST be 0 for status='concrete'
+  gate_2_word_count:
+    pass: {true | false}
+    target_range: [{min}, {max}]
+  gate_3_voice_match:
+    pass: {true | false}
+    cover_the_name_score: {N}/10
+  gate_4_anti_patterns:
+    pass: {true | false}
+    patterns_checked: [pattern-11, generic-llm-voice, hashtag-spam, multiple-cta, atomization-mechanical-repeat]
+    violations: []
+  gate_5_single_cta:
+    pass: {true | false}
+    cta_count: {N}  # MUST be 1
+  gate_6_asset_specs:
+    pass: {true | false}
+    asset_count: {N}
+  gate_7_factual_claims_check:  # NEW v1.3.0
+    pass: {true | false}
+    reject_immediate: {true | false}  # never-claim semantic match
+    factual_claims_traced:
+      - claim_in_post: "{paraphrase of claim}"
+        source: {claim_id_C00X | public_fact | attributed}
+    unverified_claims: []  # if non-empty: explanation per claim
+    fact_checker_recommendation: {ship | retry_with_ledger_constraints | manual_review_needed}
+  gate_8_reader_honesty:  # NEW v1.3.0
+    pass: {true | false}
+    ratio_reader_first_pct: {N}
+    ratio_author_first_pct: {N}
+    threshold: 70/30
+    judge_notes: "{1-2 sentence rationale}"
+
+# --- Anti-fabrication trace (NEW v1.3.0) ---
+factual_claims_used:
+  - claim_id: {C00X from verified-claims.csv}
+    where_in_post: "{paragraph or section identifier}"
+  - public_fact: "{fact + source if available}"
+    where_in_post: "{location}"
+  - attributed: "{attribution marker phrasing}"
+    where_in_post: "{location}"
+
+narrative_gaps_to_fill: []  # if non-empty: post should NOT be status='concrete', user must review
+
+# --- Operator notes (kept for transparency) ---
+operator_notes:
+  signature_moves_used: []
+  anti_patterns_avoided: []
+  voice_fingerprint_score: {N}/10
+  variations_from_default: |
+    {what variant was chosen and why ; e.g., "Used failure-confession variant of atomization (rotation rule)"}
+
+# --- Production cost trace ---
+tokens_used:
+  input: {N}
+  output: {N}
+  total: {N}

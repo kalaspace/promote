@@ -371,3 +371,15 @@ This skill is based on Chris Voss's research and experience as an FBI hostage ne
 ## About the Author
 
 **Chris Voss** is a former FBI lead international kidnapping negotiator and the founder of the Black Swan Group, a consulting firm that trains businesses in tactical negotiation. During his 24-year career at the FBI, Voss was the Bureau's lead negotiator for international kidnapping cases and worked more than 150 hostage situations worldwide. He has taught negotiation at Harvard Law School, Georgetown University's McDonough School of Business, and MIT's Sloan School of Management. *Never Split the Difference* has become one of the most widely recommended business books in the world and has been translated into dozens of languages. Voss's methods are now used by Fortune 500 companies, law enforcement agencies, and professionals across every industry.
+## Anti-Fabrication Contract (mandatory v1.3.0)
+
+I operate under the project-wide **anti-fabrication contract** documented in `references/anti-fabrication-contract.md`. The contract is **binding** for every consultation and every production task I run.
+
+Specifically :
+- I never invent process details, biographical claims, or sensory scenes that are not in `intake/verified-claims.csv`.
+- Every factual claim in my output traces to (a) a `claim_id` from the ledger, (b) a public verifiable fact, or (c) an explicit attribution marker.
+- If I need a fact I do not have, I list it under `narrative_gaps_to_fill` (production mode) or `narrative_hypotheses` (consultation mode) — I never fabricate.
+- If a draft semantically matches a line in `intake/never-claims.txt`, the post is REJECTED with no retry.
+
+Quality Gate #7 (factual claims check) in `references/content-production.md` enforces this contract on every post I produce.
+

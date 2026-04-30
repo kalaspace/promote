@@ -1,8 +1,10 @@
-# Intake Questions — the 5 batches of P1
+# Intake Questions — the 5 batches of P1 (v1.3.0)
 
 The strategist asks ONLY about THE PRODUCT. It NEVER asks about marketing method, channels, frequency, or copy frameworks — those are the strategist's decisions.
 
 For each question : the **intent** (what we'll use it for), the **skip condition** (don't ask if already known), and (where ambiguous) the **rationale** if user pushes back ("why are you asking this?").
+
+**v1.3.0 note** : after P1 (all 5 batches answered), the strategist runs **P1.5 Claims Extraction & Validation** (see `pipeline-phases.md`) to build `intake/verified-claims.csv` from the batch responses. The user reviews the extracted ledger in 15 min before P2 starts. This prevents the v1.2.0 hallucination problem (operators inventing process details not in intake). Authors should be **specific and concrete** in their batch answers — vague answers ("I think I started maybe a year ago") become claims `confidence=LOW` that won't be usable as sources downstream. Specific answers ("started October 2024 with this prompt:...") become `confidence=HIGH` and unlock high-fidelity content production.
 
 ---
 

@@ -1,0 +1,47 @@
+# Tripwires — Top 3 KPIs (v1.3.0)
+
+> **Trimmed from v1.2.0 `10-instrumentation.md`**. Just the 3 most decision-relevant KPIs with thresholds + owner. Full instrumentation matrix (8 tripwires + attribution stack + branded search + kill-switch detail) is deferred to `promote-executor` (Part 2).
+
+## Primary KPI (North Star)
+
+- **NSM**: {name + one-sentence definition}
+- **Why this NSM**: {captures real value, not a vanity metric}
+- **Source of measurement**: {tool + manual or automated}
+- **Frequency of review**: {weekly recommended for first 90d}
+- **Threshold for action**:
+  - GREEN: ≥ {value} → strategy is working, stay course.
+  - YELLOW: between {floor} and {value} → re-examine top-2 input metrics.
+  - RED: < {floor} → strategist re-run on weakest sub-phase.
+
+## Secondary KPI #1 (leading indicator)
+
+- **Metric**: {name}
+- **Why secondary, not primary**: {it's leading, not lagging — moves before NSM moves}
+- **Owner**: {name or role}
+- **Frequency**: {daily / weekly}
+- **Threshold for action**:
+  - {3 thresholds GREEN/YELLOW/RED with concrete values}
+
+## Secondary KPI #2 (input gate)
+
+- **Metric**: {name}
+- **Role**: gate — if this drops below threshold, NSM cannot improve regardless of other actions.
+- **Owner**: {name or role}
+- **Frequency**: {daily / weekly}
+- **Threshold for action**:
+  - {3 thresholds with concrete values}
+
+## What we DON'T track (yet)
+
+The full attribution stack, branded search delta tracking, kill-switch on multi-touch drift, MTD vs cohort analysis, etc. are deferred to `promote-executor` once 30 days of data exist. The top-3 above is the minimum viable instrumentation for the first 14d of content production.
+
+## Reading guide
+
+- **At J+7**: don't act on NSM alone — too early. Look at Secondary #1 + #2 only.
+- **At J+30**: NSM should show first signal. If GREEN, continue with current pillars.
+- **At J+90**: NSM final check. If still below RED threshold despite full pipeline executed, escalate to a strategy re-run with new inputs (probably ICP or positioning).
+
+## Pattern compliance
+
+- ✅ Pattern 12 — Output structured.
+- ✅ Pattern 15 — Anti-pattern (vanity metrics) explicitly excluded via NSM rationale field.

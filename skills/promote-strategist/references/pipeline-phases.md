@@ -1,6 +1,13 @@
-# Pipeline Phases — `promote-strategist`
+# Pipeline Phases — `promote-strategist` (v1.3.0)
 
-Detailed specification of each of the 5 phases. Companion to the main SKILL.md.
+Detailed specification of each phase. Companion to the main SKILL.md.
+
+**v1.3.0 changes vs v1.2.0**:
+- New phase **P1.5 — Claims Extraction & Validation** between P1 and P2.
+- P3 trimmed from 7 to 5 sub-phases (A-E ; ex-F GEO-Plan CUT, ex-G Rumelt-Aval opt-in via `--rumelt-aval` flag, renamed P3.F).
+- P3.E adds Schwartz awareness routing in calendar + top-3-tripwires consolidation (replaces full 8-tripwire instrumentation).
+- P4 adds 2 Quality Gates (#7 factual claims check + #8 reader-honesty) and produces output as 2-file split (`.md` pure content + `.meta.yaml`).
+- P5 produces 11 strategy files (vs 14) — 09-geo-plan + p3g-rumelt + 10-instrumentation full removed/replaced ; calendar trimmed.
 
 ## P0 — INTAKE
 
@@ -49,6 +56,52 @@ For each batch B1...B5:
 
 **Loop control**: if user gives meta-questions ("why are you asking?"), answer briefly using the rationale from `intake-questions.md` for that question, then re-pose. Do not abandon a batch.
 
+## P1.5 — CLAIMS EXTRACTION & VALIDATION (NEW v1.3.0)
+
+**Mandatory read**: `../../../references/claims-ledger-spec.md` (CSV format + lifecycle).
+
+**Inputs**: all `intake/batch-*.md` from P1 + `intake/url-crawl.md` from P0.
+
+**Steps**:
+
+1. **Read+Task** the claims-extractor subagent (`prompts/utility/claims-extractor/prompt.md`):
+   ```
+   extractor_path = "prompts/utility/claims-extractor/prompt.md"
+   extractor_content = Read(extractor_path)
+   intake_files_content = concat(Read all intake/batch-*.md + url-crawl.md)
+   Task(
+     subagent_type="general-purpose",
+     description="Claims extraction from intake",
+     prompt=f"""You are the claims-extractor. Use this prompt:
+
+   {extractor_content}
+
+   Intake content to process:
+   {intake_files_content}
+
+   Output a CSV (verified-claims.csv format per references/claims-ledger-spec.md).
+   """
+   )
+   ```
+2. **Save the extracted CSV** to `<runtime_root>/{slug}/intake/verified-claims.csv`.
+3. **Initialize never-claims.txt** with header (no body — user fills manually).
+4. **Mode guided gate humain** (default):
+   - Print to user: *"Voici les {N} claims extraites de ton intake. Review en 15 min : valide/rejette/édit. Liste en `never-claims.txt` les phrases que tu refuses qu'on dise sur ton produit."*
+   - Wait for user response (user edits CSV directly, then says "done").
+5. **Mode autopilot**:
+   - Auto-validate `verified_by_user=TRUE` for all `confidence=HIGH`.
+   - Mark all `MEDIUM`/`LOW` as `verified_by_user=FALSE`.
+   - Leave `never-claims.txt` empty.
+6. Update `STATE.claims_ledger_validated_at = <ISO>` and `STATE.phase = P2`.
+
+**Output gate**: `verified-claims.csv` exists with ≥10 rows (a typical product yields 20-50 claims). `never-claims.txt` exists (may be empty).
+
+**Failure modes**:
+- Extractor fails (timeout, malformed CSV) → retry once. If fails again, use mode "autopilot" with user-confirmed warning.
+- User refuses ledger validation in guided mode → fall back to autopilot semantics for this campaign + log warning in STATE.
+
+**Cost**: ~5-10K tokens (1 subagent call). User time: ~15 min in guided mode.
+
 ## P2 — MARKET RESEARCH
 
 **Inputs**: P0 + P1 outputs, especially:
@@ -74,85 +127,144 @@ For each batch B1...B5:
 
 **Time budget**: 5-10 WebSearch + WebFetch calls maximum. If research exceeds budget without convergence, stop and proceed with what's available, marking gaps as `hypothesis_to_validate`.
 
-## P3 — STRATEGY SYNTHESIS
+## P3 — STRATEGY SYNTHESIS (5 sub-phases A-E v1.3.0, ex-F+G removed/opt-in)
 
-**This is the heart of the pipeline.** 15 delegations executed in order. See `delegation-matrix.md` for the verbatim invocation prompt for each.
+**This is the heart of the pipeline.** Two-pass orchestration via Read+Task on `prompts/{operators,personas,frameworks}/*/prompt.md`. See `delegation-matrix.md` for the verbatim Read+Task pattern.
 
-The skills invoked, in order:
+**v1.3.0 trimming rationale**: post-mortem of v1.2.0 campaign (`amazon-fr-dp-b0gx2zpnyq`) showed `09-geo-plan.md` + full `10-instrumentation.md` + `p3g-rumelt-aval.md` had ~0% downstream impact on P4 content production. They are removed (Geo) or opt-in (Rumelt-Aval) or trimmed (instrumentation → top-3 tripwires).
 
-| Step | Skill or Reference | Type |
+**MANDATORY for ALL P3 sub-phase invocations**: each subagent receives `intake/verified-claims.csv` + `intake/never-claims.txt` in its context. Subagents in CONSULTATION mode produce 8 fields (the 7 v1.2.0 fields + new `narrative_hypotheses`). See `delegation-matrix.md` for the schema.
+
+### P3.A — Foundations (no channel-specific operators)
+
+Sequenced steps:
+
+| Step | Path | Type |
 |---|---|---|
-| a | `../../../references/strategy-kernel.md` | Read (validator AMONT) |
-| b | `promote-jtbd-switch` | Skill |
-| c | `../../../references/category-design.md` THEN `promote-dunford-positioning` | Read THEN Skill |
-| d | `promote-hormozi` | Skill |
-| e | `promote-schwartz` | Skill |
-| f | `promote-ammar` | Skill |
-| g | `promote-growth-four-fits` | Skill |
-| h | `promote-plg-design` | Skill (conditional: software products only) |
-| i | `../../../references/psychology-canon.md` | Read |
-| j | `promote-x-mastery` | Skill |
-| k | `promote-mrbeast` | Skill (conditional: video channel retained) |
-| l | `promote-geo-optimization` | Skill |
-| m | `../../../references/demand-gen.md` + `../../../references/attribution-canon.md` THEN `promote-paul-graham` | Read THEN Skill |
-| n | `promote-holiday` | Skill |
-| o | `../../../references/strategy-kernel.md` | Read (validator AVAL) |
+| A.1 | `../../../references/strategy-kernel.md` | Read (mental validator AMONT) |
+| A.2 | `prompts/frameworks/jtbd-switch/prompt.md` | Read+Task → `02-jtbd-switch.md` |
+| A.3 | `../../../references/category-design.md` THEN `prompts/frameworks/dunford-positioning/prompt.md` | Read+Task → `03-positioning.md` |
+| A.4 | `prompts/personas/hormozi/prompt.md` | Read+Task (offer audit) → `04-offer-audit.md` |
+| A.5 | `prompts/personas/schwartz/prompt.md` | Read+Task (awareness stages) → append to `04-offer-audit.md` |
+| A.6 | `prompts/personas/ammar/prompt.md` | Read+Task (contrarian reframe) → append to `03-positioning.md` |
+| A.7 | `prompts/frameworks/growth-four-fits/prompt.md` | Read+Task → `05-growth-fits.md` |
+| A.8 | `prompts/frameworks/plg-design/prompt.md` (CONDITIONAL: software only) | Read+Task → append to `05-growth-fits.md` |
+| A.9 | `../../../references/psychology-canon.md` | Read (Cialdini levers, mental input) |
+| A.10 | `prompts/personas/paul-graham/prompt.md` | Read+Task (distribution philosophy) → `06-distribution-philosophy.md` |
 
-For each Skill step:
-1. Build the invocation prompt per `delegation-matrix.md`.
-2. Inject relevant context (from upstream artifacts and STATE.known_facts).
-3. Invoke the skill.
-4. Capture the output and write to the prescribed artifact path.
-5. **Quality gate**: artifact exists, follows expected schema (cf. `strategy-schema.md`), contains no `Pattern #11` (auto-explanatory extensions — see `../../../references/skill-grammar.md` Part 5).
-6. If quality gate fails, retry once with refined input. If fails again, escalate (mark `manual_review_needed` in STATE).
+### P3.B — Channel Mix Initial Proposal
 
-For each Read step:
-1. Open the reference file.
-2. Apply its content as a mental gate (Rumelt) or input modulator (psychology-canon).
+| Step | Path | Type |
+|---|---|---|
+| B.1 | `prompts/orchestrators/channel-strategist/prompt.md` | Read+Task → DRAFT `06-distribution-plan.md` |
 
-**Caching rule**: each artifact is generated **once per campaign** unless explicit re-invocation needed. If `STATE.phase == P3-resume`, only re-run delegations where input artifacts have changed.
+### P3.C — Strategic Consultation (operators-as-strategists)
 
-**Time budget**: 15 delegations × ~30K tokens each = ~450K tokens for P3. Budget breach signal: if delegation cost exceeds 50K tokens, log and continue (don't abort).
+For EACH channel in primary + secondary mix (from B.1 draft), Read+Task the corresponding operator/persona prompt. Routing per `../../../references/content-production.md`. See `delegation-matrix.md` for the consultation prompt template.
 
-## P4 — CONTENT PRODUCTION 14-DAY (NEW v1.1.0)
+Each operator returns 8 fields including `narrative_hypotheses` (NEW v1.3.0).
 
-For the **first 14 days** of the calendar (J0-J13), produce concrete posts using operator skills in PRODUCTION mode.
+Save to `strategy/operator-consultations/{operator-name}.md`.
+
+### P3.D — Mix Refinement & Conflict Resolution
+
+`channel-strategist` aggregates the consultations:
+- `feasibility_score` < 5 → defer.
+- Inter-operator conflicts resolved via matrix in `delegation-matrix.md`.
+- All `narrative_hypotheses` from consultations flagged for user confirmation in `strategy/06-distribution-plan.md`.
+- Tradeoffs documented in same file.
+
+### P3.E — Pillars + Cadence + Voice + Top-3 Tripwires Consolidation
+
+Outputs:
+- `strategy/07-content-pillars.md` (3-5 pillars, awareness_stage tag mandatory per pillar — Schwartz routing v1.3.0).
+- `strategy/08-channel-strategy.md` (cadence + voice + format per channel).
+- `strategy/10-tripwires-top3.md` (3 KPIs only — replaces full 8-tripwires v1.2.0).
+
+**Schwartz distribution rule**: max 30% of posts per awareness_stage on the 14d concrete window. If draft calendar has 70% product-aware, force regeneration with diversification.
+
+### P3.F (OPT-IN ONLY) — Rumelt validator AVAL via flag `--rumelt-aval`
+
+**Default v1.3.0**: skipped. Mental Rumelt validator at A.1 + test signature at end of P5 = sufficient for most campaigns.
+
+**If flag `--rumelt-aval` set in invocation**:
+- Re-read `../../../references/strategy-kernel.md` "Validateur AVAL" section.
+- Walk the 8-point checklist: diagnosis explicit, policy ONE direction (not three), policy excludes options, actions mutually reinforcing, no fluff, no goals-as-strategy, hypotheses-to-validate listed, each artifact follows template.
+- Save to `strategy/p3f-rumelt-aval.md`.
+- If 1+ fail: identify weakest sub-phase, loop back ONCE. If 2+ fail after loop: escalate to user.
+
+### Cut in v1.3.0
+
+**Cut entirely (no longer generated)**:
+- `strategy/09-geo-plan.md` — Indig consultation + Holiday earned-media + GEO 7-lever audit. Defer to standalone skill `promote-geo-strategist` (v1.3.1+) post-J+30.
+
+**Quality gate per artifact**:
+1. File exists at expected path.
+2. Required sections present (per quality gate listed in `delegation-matrix.md`).
+3. No Pattern #11 (auto-explanatory extension — see `../../../references/skill-grammar.md` Part 5).
+4. No fabricated numbers (no specific stats/percentages without source ; verify against `verified-claims.csv`).
+
+If gate fails, retry the delegation ONCE with refined input. If second retry fails, mark `manual_review_needed` in STATE for that artifact, continue.
+
+**Caching rule**: each artifact generated once. If `STATE.phase == P3-resume`, only re-run delegations where input artifacts changed.
+
+**Time budget v1.3.0**: ~280K tokens for P3 (vs ~348K v1.2.0, -20% via trimming).
+
+## P4 — CONTENT PRODUCTION 14-DAY (v1.3.0 with ledger + 8 quality gates + schema split)
+
+For the **first 14 days** of the calendar (J0-J13), produce concrete posts using operator subagents in PRODUCTION mode.
 
 **Steps**:
 
-1. **Build calendar skeleton** : 90 days × cadence per channel. For J14-J89, status='outline' with hypothesis. For J0-J13, prepare for production.
+1. **Build calendar skeleton** : 90 days × cadence per channel. For J14-J89, status='outline' with minimal fields (`date,channel,pillar,format,awareness_stage,hypothesis,status='outline'`). For J0-J13, prepare for production.
 2. **For each J0-J13 slot** (~14-42 slots depending on cadence) :
-   - Read slot row (date, channel, pillar, format, hypothesis).
-   - Read `strategy/operator-consultations/{operator-name}.md` for the channel's operator (created in P3.C). **CRITICAL** : without this, abort and require P3.C to be re-run.
+   - Read slot row (date, channel, pillar, format, **awareness_stage**, hypothesis).
+   - Read `strategy/operator-consultations/{operator-name}.md` (must include `narrative_hypotheses` v1.3.0). **CRITICAL** : abort if missing.
+   - Read `intake/verified-claims.csv` + `intake/never-claims.txt` (NEW v1.3.0 mandatory).
    - Identify operator/framework via routing table in `../../../references/content-production.md`.
-   - If operator skill: invoke in PRODUCTION mode with the 7 inputs (positioning + pillar + cadence + voice + slot.hypothesis + strategic_recommendations + anti_patterns).
-   - If framework: read framework + apply tactiques + generate.
-   - Save post to `campaigns/{slug}/content/posts/{YYYY-MM-DD}-{channel}-{pillar-short}.md` (template: `templates/post.md.template`).
-   - Update calendar row: status='concrete', body_path, generated_at.
-3. **Quality gates** per `../../../references/content-production.md` : title length 30-80 chars, body word-count appropriate, voice match (informal cover-the-name), no Pattern #11, single CTA, asset specs explicit.
-4. **If quality gate fails** : retry once with refined input. If fails again: mark `manual_review_needed` for that slot, continue.
-5. **Output** : 14-42 concrete posts in `campaigns/{slug}/content/posts/` + calendar updates.
+   - If operator/persona prompt: Read+Task in PRODUCTION mode with **10 inputs** (positioning + pillar + cadence + voice + slot.hypothesis + strategic_recommendations + anti_patterns + narrative_hypotheses + verified_claims_csv + never_claims_txt). Subagent operates under `../../../references/anti-fabrication-contract.md`.
+   - If framework: read framework + apply tactiques inline. Strategist STILL applies anti-fabrication contract.
+   - Subagent returns: title + body + `factual_claims_used` + `narrative_gaps_to_fill` + assets_specs + posting_metadata + `atomization_variant_used`.
+3. **Run 8 Quality Gates** per `../../../references/content-production.md`:
+   - #1 Form (length + reject-on-placeholder hard FAIL if `{...}` in body)
+   - #2 Word count
+   - #3 Voice match
+   - #4 Anti-patterns transverses (Pattern #11, atomization-mechanical-repeat, etc.)
+   - #5 Single CTA
+   - #6 Asset specs
+   - **#7 Factual Claims Check (NEW)** — Read+Task `prompts/utility/fact-checker/prompt.md` ; reject_immediate if never-claim match
+   - **#8 Reader-Honesty (NEW)** — Read+Task `prompts/utility/reader-honesty-judge/prompt.md` ; ratio reader-first ≥ 70%
+4. **If pass**: split output into 2 files (NEW v1.3.0 schema):
+   - `campaigns/{slug}/content/posts/{YYYY-MM-DD}-{channel}-{pillar-short}.md` (PURE CONTENT, copy-paste ready, no metadata, NO `{...}` placeholders)
+   - `campaigns/{slug}/content/posts/.meta/{YYYY-MM-DD}-{channel}-{pillar-short}.yaml` (METADATA: gates audit, asset specs, posting metadata, voice notes, factual_claims_used, narrative_gaps_to_fill, atomization_variant_used)
+5. **If gate fails**: retry once with refined input (e.g., constrain factual_claims_used to ledger). If fails again: mark `manual_review_needed` for that slot, continue.
+6. **If Gate #7 reject_immediate (never-claim match)**: jeter le draft, slot reste en `outline`, log `manual_review_needed: matched never-claim "{X}"`. Pas de retry.
+7. **Output**: 14-42 concrete posts (2 files each) in `campaigns/{slug}/content/posts/` + `.meta/` subdir + calendar updates with `body_path` + `meta_path`.
 
-**Time budget** : ~30-50K tokens for content production 14d (cf. plan trade-offs Phase 7.J).
+**Time budget v1.3.0**: ~500K tokens for content production 14d (vs ~340K v1.1.0 — augmentation due aux gates #7+#8 mais compensée par les économies Phase 9.E).
 
-**For J14-J89 (76 days remaining)** : NOT produced in P4. They are converted on demand by `promote-content-batcher` at user invocation (J+14, J+28, J+42, etc.).
+**For J14-J89 (76 days remaining)**: NOT produced in P4. They are converted on demand by `promote-content-batcher` at user invocation (J+14, J+28, J+42, etc.). Same v1.3.0 schema split applies.
 
-## P5 — PACKAGING (renamed from P4 in v1.0.0)
+## P5 — PACKAGING (v1.3.0)
 
 **Steps**:
 
-1. Generate `strategy/00-product-brief.md` from intake/* artifacts (template: `templates/00-product-brief.md.template`).
+1. Generate `strategy/00-product-brief.md` from intake/* artifacts (template). Highlight P1.5 ledger key claims.
 2. Generate `strategy/01-market-research.md` from research/* artifacts.
-3. P3 artifacts (02-10) are already in place from P3.A-G.
-4. Calendar `strategy/11-content-calendar-90d.csv` already filled with J0-J13 concrete (from P4) + J14-J89 outline. Columns: date, channel, pillar, format, title, body_outline, body_path, assets_path, status.
-5. Generate `strategy/strategy-summary.md` (2-page exec summary, template). Must contain Rumelt's 3 elements + tradeoffs résolus from P3.D.
-6. Generate `strategy/handoff-to-executor.yaml` with sections including content (concrete_posts_count, outlines_count, posts_directory, channel_distribution).
-7. Run `completeness-checklist.md` (40 points).
-8. **Decision** :
+3. P3 artifacts already in place (P3.A-E + optional P3.F Rumelt). Note: NO `09-geo-plan.md` in v1.3.0 default.
+4. Calendar `strategy/11-content-calendar-14d-then-outline.csv` (RENAMED from 90d.csv). Columns: `date, channel, pillar, format, awareness_stage, body_path, meta_path, hypothesis, status`. J0-J13 concrete with paths filled. J14-J89 outline with minimal fields.
+5. Generate `strategy/strategy-summary.md` (2-page exec summary). Must contain Rumelt's 3 elements + tradeoffs résolus from P3.D + narrative-hypotheses-requiring-confirmation.
+6. Generate `strategy/handoff-to-executor.yaml` with sections including:
+   - `content` (concrete_posts_count, outlines_count, posts_directory, **meta_directory**, channel_distribution)
+   - `tripwires_top3` (NEW v1.3.0, from `10-tripwires-top3.md`)
+   - `ledger_path: campaigns/{slug}/intake/verified-claims.csv`
+   - `never_claims_path: campaigns/{slug}/intake/never-claims.txt`
+7. Run `completeness-checklist.md` (28 points v1.3.0, trimmed from 40).
+8. **Decision**:
    - `pass% >= 90%` → `STATE.status = ready-for-executor`.
    - `90% > pass% >= 70%` → loop back to weakest phase, retry once.
    - `pass% < 70%` → escalate.
-9. Output completion summary to user with paths to `strategy-summary.md` + `content/posts/` directory.
+9. Output completion summary to user with paths to `strategy-summary.md` + `content/posts/` directory + `intake/verified-claims.csv`.
 
 ## Resume mode
 

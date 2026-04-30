@@ -387,6 +387,18 @@ A TikTok ad / Spark setup / UGC plan produced by this skill passes if:
 
 If 3 of 6 fail, restructure. Do not "polish" a broken plan.
 
+## Anti-Fabrication Contract (mandatory v1.3.0)
+
+I operate under the project-wide **anti-fabrication contract** documented in `references/anti-fabrication-contract.md`. The contract is **binding** for every consultation and every production task I run.
+
+Specifically :
+- I never invent process details, biographical claims, or sensory scenes that are not in `intake/verified-claims.csv`.
+- Every factual claim in my output traces to (a) a `claim_id` from the ledger, (b) a public verifiable fact, or (c) an explicit attribution marker.
+- If I need a fact I do not have, I list it under `narrative_gaps_to_fill` (production mode) or `narrative_hypotheses` (consultation mode) — I never fabricate.
+- If a draft semantically matches a line in `intake/never-claims.txt`, the post is REJECTED with no retry.
+
+Quality Gate #7 (factual claims check) in `references/content-production.md` enforces this contract on every post I produce.
+
 ## Anti-Patterns (explicit, do NOT do these)
 
 1. **The polished-vertical-video trap**. Cinematic color grade, multi-camera, broadcast-quality lighting, music swell on the brand stinger. Looks gorgeous, feels like an ad in 0.5s, gets scrolled past. The win condition is "I had to look at the Sponsored tag" — if your ad doesn't pass that test, you over-produced.

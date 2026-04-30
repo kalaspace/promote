@@ -1,40 +1,16 @@
 ---
-slug: {YYYY-MM-DD}-{channel}-{pillar-short}
 date: {YYYY-MM-DD}
 channel: {channel}
-pillar: {pillar-name}
-format: {long-form | thread | carousel | reel | short | email | etc.}
-operator_or_framework: {promote-X or references/channel-X.md}
-generated_at: {ISO date}
-status: draft  # draft → approved → posted
+pillar: {pillar-short-name}
+format: {long-form | thread | carousel | reel | short | email | substack | amazon-listing}
+awareness_stage: {unaware | problem-aware | solution-aware | product-aware | most-aware}
 ---
 
-# {Title (30-80 chars, hook)}
+{Body — copier-coller direct vers la plateforme. PUR CONTENU. Aucune section "Hypothesis", aucune "Operator notes", aucun {placeholder} non rempli. Si le canal le justifie, séparation par "---" pour le first-comment.}
 
-## Hypothesis (from strategist calendar)
+{Si applicable au canal (LinkedIn long-form, X thread reply) :}
 
-{the original slot.hypothesis from the calendar — what this post is testing}
+---
+*First comment to post :*
 
-## Body
-
-{Full content : 200-1500 mots selon canal/format}
-
-## Assets needed (briefs, not generated)
-
-- {asset 1 brief: type, dimensions, content direction}
-- {asset 2 brief}
-
-## Posting metadata
-
-- **Best time** : {YYYY-MM-DD HH:MM TZ}
-- **Hashtags** : {if applicable}
-- **CTA** : {explicit single call-to-action}
-- **Cross-post** : {if multi-channel adaptation needed}
-- **Tracking UTM** : {if applicable}
-
-## Operator notes
-
-- Anti-patterns checked : {Pattern #11, channel-specific}
-- Signature moves used : {1 max per post}
-- Voice match score : {informal cover-the-name test}
-- Quality gates passed : {Title length, Body word-count, Voice, Anti-patterns, Single CTA, Asset specs}
+{Texte du premier commentaire à poster séparément après publication. Aussi pur contenu.}

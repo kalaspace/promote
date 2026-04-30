@@ -2,6 +2,103 @@
 
 All notable changes to promote (the `promote` plugin).
 
+## [1.3.0] — 2026-05-01 — **BREAKING — Quality + Verification + Lean**
+
+### Why this release
+
+Real-test feedback after v1.2.0 ran on the campaign `amazon-fr-dp-b0gx2zpnyq` (François' book "L'IA au boulot"). Four structural problems surfaced :
+
+1. **Hallucinations factuelles** : ~30-40% of posts contained ≥1 factual claim about the author/process that was not in the intake. Worst case : a Substack post invented "6 months of writing without AI", "12 chapters jetés", "samedi matin novembre café froid" — the author had NEVER attempted to write without AI. The pipeline had **0 factuality gates** ; the 6 quality gates v1.2.0 checked form (length, voice, anti-patterns) but not substance.
+2. **Posts pas compelling** : 5 patterns of failure (factual hooks instead of emotional, mechanical atomization repetition, urgency-less CTAs, no "why listen to me" anchor, no Schwartz awareness routing). Best posts (Substack 8/10) were also worst hallucinators.
+3. **Mix contenu/metadata** : ratio ~50/50 in each post.md. Worst cases at 19-28% pure content (templates with `{...}` placeholders never filled).
+4. **Coût/valeur orchestration** : P3 = 23% of tokens (348K), but 4 artefacts (`09-geo-plan.md` + full `10-instrumentation.md` + `11-content-calendar-90d.csv` detailed + `p3g-rumelt-aval.md`) had ~0% downstream impact on P4 content production = pure theater.
+
+### What v1.3.0 delivers (5 modules of patches)
+
+#### 9.A — Verified Claims Ledger + Quality Gate #7 (factual claims check)
+
+- **NEW phase P1.5 — Claims Extraction & Validation** between P1 and P2. The new `prompts/utility/claims-extractor/prompt.md` subagent extracts factual claims from intake into `intake/verified-claims.csv` (columns : `claim_id, claim_text, source_batch, source_quote, category, confidence, verified_by_user`). User reviews in 15 min (mode guided) ; mode autopilot auto-validates HIGH-confidence claims.
+- **NEW `intake/never-claims.txt`** : user-curated list of forbidden phrasings. Quality Gate #7 reject_immediate any post matching semantically.
+- **NEW Quality Gate #7 (factual claims check)** : `prompts/utility/fact-checker/prompt.md` subagent cross-checks every claim in produced posts against the ledger. Sources accepted : (a) `claim_id` from CSV, (b) public verifiable fact, (c) explicit attribution marker. Verdict : ship / retry_with_ledger_constraints / manual_review_needed.
+- **NEW `references/claims-ledger-spec.md`** : full format + lifecycle + extraction rules + validation rules.
+- **NEW `references/anti-fabrication-contract.md`** : binding contract injected by reference into all 34 internal prompts.
+
+#### 9.B — Operator prompt hardening (anti-fabrication + voice fidelity)
+
+- **All 34 internal prompts** (16 operators + 9 personas + 8 frameworks + 1 orchestrator) now contain the `## Anti-Fabrication Contract` section, bound to `references/anti-fabrication-contract.md`.
+- **Welsh-LinkedIn patch** : added Hook variants library (10 variants), Atomization rotation rule (consume prior `.meta.yaml` to enforce variant diversity), Compelling content rules (5 patches: hook=sentiment-first, atom rotation, urgency CTA, why-listen anchor, reader-honesty target).
+- **Lenny-Substack patch** : added Narrative arc rules (5 rules) explicitly addressing the v1.2.0 hallucination. Default is now Option B `from-day-1-with-method arc` ; Option A `failure-pivot arc` requires ledger confirmation. "Show your prompts" must be REAL prompts. Sensory details require source.
+
+#### 9.C — Compelling content patches
+
+- **NEW Quality Gate #8 (reader-honesty)** : `prompts/utility/reader-honesty-judge/prompt.md` audits reader-first vs author-first ratio. Threshold by awareness_stage (unaware ≥80% ... most-aware ≥60%). Below threshold = retry / manual_review.
+- **Atomization variants library (10 variants)** in `references/content-production.md`. Rotation rule enforced by Quality Gate #4 (atomization-mechanical-repeat detection).
+- **Schwartz awareness routing** : `awareness_stage` becomes a mandatory column in calendar. Distribution rule : max 30% per stage on the 14d concrete window.
+
+#### 9.D — Output schema split (.md pure content + .meta.yaml metadata)
+
+- **`content/posts/{slug}.md`** : pure copy-paste-ready content. NO metadata, NO `{...}` placeholders allowed (Quality Gate #1 reject-on-placeholder hard FAIL).
+- **`content/posts/.meta/{slug}.yaml`** : full metadata audit (asset specs, posting metadata, gate audits, voice notes, factual_claims_used, narrative_gaps_to_fill, atomization_variant_used, tokens_used).
+- **NEW `templates/post.meta.yaml.template`** : the metadata schema.
+
+#### 9.E — Aggressive trim P3 (-25% tokens)
+
+- **CUT** `strategy/09-geo-plan.md` entirely (defer to standalone `promote-geo-strategist` v1.3.1+).
+- **CUT** `strategy/p3g-rumelt-aval.md` by default (opt-in via `--rumelt-aval` flag, renamed `p3f-rumelt-aval.md`).
+- **TRIM** `strategy/10-instrumentation.md` (full 8-tripwires) → `strategy/10-tripwires-top3.md` (3 KPIs only).
+- **TRIM** `strategy/11-content-calendar-90d.csv` (90 detailed) → `strategy/11-content-calendar-14d-then-outline.csv` (14d concrete + 76d minimal outline).
+- **Net P3 economy** : ~105K tokens out, ~70-140K tokens in for new gates #7+#8 = neutral or slightly reduced.
+
+### BREAKING migration impact
+
+If you had v1.2.0 campaigns running, you will need to :
+
+1. Re-run P1.5 manually : invoke the claims-extractor subagent on existing intake to generate `verified-claims.csv` + initialize `never-claims.txt`. The strategist v1.3.0 in `--resume` mode handles this.
+2. Existing `content/posts/{slug}.md` files mix content + metadata. They will work as-is for `promote-executor` later, but for new posts the schema split applies. Optional migration script.
+3. Existing `09-geo-plan.md` + full `10-instrumentation.md` + `p3g-rumelt-aval.md` artefacts in v1.2.0 campaigns are kept untouched. New campaigns won't generate them.
+4. `11-content-calendar-90d.csv` schema change : new columns `awareness_stage, body_path, meta_path` (instead of `title, body_outline, body_path, assets_path`). Old calendars need migration if you want to use content-batcher v1.3.0.
+
+### Token budget v1.3.0 vs v1.2.0
+
+- v1.2.0 total : ~1.51M tokens per campaign
+- v1.3.0 total : ~1.2-1.3M tokens per campaign
+- **Net reduction : 15-20% at higher quality**
+
+### Files added
+
+- `references/anti-fabrication-contract.md`
+- `references/claims-ledger-spec.md`
+- `prompts/utility/claims-extractor/prompt.md`
+- `prompts/utility/fact-checker/prompt.md`
+- `prompts/utility/reader-honesty-judge/prompt.md`
+- `skills/promote-strategist/templates/post.meta.yaml.template`
+- `skills/promote-strategist/templates/verified-claims.csv.template`
+- `skills/promote-strategist/templates/never-claims.txt.template`
+
+### Files removed
+
+- `skills/promote-strategist/templates/09-geo-plan.md.template`
+
+### Files renamed
+
+- `skills/promote-strategist/templates/10-instrumentation.md.template` → `10-tripwires-top3.md.template`
+- `skills/promote-strategist/templates/11-content-calendar-90d.csv.template` → `11-content-calendar-14d-then-outline.csv.template`
+
+### Files modified (substantial)
+
+- `references/content-production.md` (gates #7+#8, output schema split, atomization variants)
+- `skills/promote-strategist/SKILL.md` (P1.5 added, P3 trimmed from 7 to 5 sub-phases)
+- `skills/promote-strategist/references/{pipeline-phases,delegation-matrix,intake-questions,completeness-checklist}.md`
+- `skills/promote-strategist/templates/{post.md,handoff-to-executor.yaml}.template`
+- `skills/promote-content-batcher/SKILL.md` (Move 4 split + fact-check)
+- All 34 internal prompts under `prompts/` (anti-fabrication contract injected by reference)
+- `prompts/operators/welsh-linkedin/prompt.md` (specific patches)
+- `prompts/operators/lenny-substack/prompt.md` (specific patches)
+- `.claude-plugin/{plugin,marketplace}.json` (1.3.0)
+- `README.md` (mention v1.3.0 + ledger workflow + schema split)
+
+---
+
 ## [1.2.0] — 2026-04-30 — **BREAKING — Hide internal skills**
 
 ### Why this release

@@ -1,0 +1,3 @@
+claim_id,claim_text,source_batch,source_quote,category,confidence,verified_by_user,notes
+C001,"{factual claim reformulated in 1 concise sentence}","batch-1-product","{exact quote from intake batch}",PRODUCT,HIGH,TRUE,""
+C002,"{another claim}","batch-2-icp","{quote}",PRODUCT,HIGH,TRUE,""

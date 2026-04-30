@@ -1,0 +1,21 @@
+# Never-claims for {slug}
+# Format: 1 forbidden claim per line. Comments start with #.
+# Quality Gate #7 (factual claims check) will REJECT_IMMEDIATE any post containing these.
+# No retry. The slot stays in 'outline' with note "matched never-claim".
+
+# Process inventions (most common — see anti-fabrication-contract.md anti-pattern)
+# Examples to fill in by user as fabrications are detected or anticipated:
+# The author tried writing the book without AI for any duration before using AI.
+# The author had previous human-only manuscripts or drafts.
+# The author tested 6+ different AI tools before settling on the current method.
+
+# Bio inventions
+# The author has previously published other books (if untrue).
+# The author has worked at GAFAM or any specific large tech company without source.
+# The author was a founder/CEO of any startup not mentioned in intake.
+
+# Product inventions
+# The book/product contains video content or interactive exercises (if untrue).
+# The product has features X, Y, Z (any feature not in intake).
+
+# Add your never-claims below — formulate semantically (will match variations):
