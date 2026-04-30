@@ -19,54 +19,119 @@ Pour CHAQUE slot du calendar à concrétiser (que ce soit en P4 ou via content-b
 7. **strategy/operator-consultations/{operator-name}.md** (les `strategic_recommendations` de l'operator du canal pour ce produit). **CRITIQUE** : sans ce fichier, on génère du contenu générique qui ignore l'expertise de l'operator.
 8. Slot row du calendar : date, channel, pillar, format, hypothesis (titre court d'orientation).
 
-## Logique de production par slot
+## Logique de production par slot (v1.2.0)
 
 ```
 1. Read all 7 inputs above for this slot.
-2. Identify operator-of-channel (cf. table below).
-3. If operator skill exists in skills/promote-{operator}/:
-   3.a. Invoke operator in MODE PRODUCTION (not consultation — that was P3.C).
-   3.b. Pass: pillar + cadence + voice + slot.hypothesis + strategic_recommendations + anti_patterns.
-   3.c. Operator returns: title + body + assets_specs + posting_metadata.
-4. Else if framework reference exists in references/channel-{name}.md:
-   4.a. Read the framework.
-   4.b. Apply tactiques + cadence + format for this slot.
-   4.c. Strategist (or content-batcher) generates title + body + assets_specs.
+2. Identify operator-prompt-path or framework-path from routing table below.
+3. If operator/persona prompt (under prompts/...):
+   3.a. Read the prompt.md file content (operator's voice + frameworks + signature moves).
+   3.b. Spawn a Task subagent with prompt = (operator content) + (slot context with all 7 inputs) + production-mode instruction.
+   3.c. Subagent returns: title + body + assets_specs + posting_metadata.
+4. Else if framework reference (under references/...):
+   4.a. Read the framework markdown.
+   4.b. Apply tactiques + cadence + format for this slot directly (no subagent — strategist generates inline).
+   4.c. Output: title + body + assets_specs.
 5. Save to campaigns/{slug}/content/posts/{YYYY-MM-DD}-{channel}-{pillar}.md (cf. templates/post.md.template).
 6. Update calendar row : status='concrete', body_path=<path>, generated_at=<ISO date>.
 ```
 
-## Channel → Operator/Framework routing table
+**Pattern Read+Task verbatim** (utilisé par P3.C strategic consultations + P4 production + content-batcher) :
 
-| Channel | Routing | Type |
+```
+operator_path = "prompts/operators/welsh-linkedin/prompt.md"  # from routing table
+operator_content = Read(operator_path)
+context = {
+  "product_brief": "...", "icp": "...", "jtbd": "...", "positioning": "...",
+  "awareness_stage": "...", "goal": "...", "constraints": "...",
+  "slot_hypothesis": "...", "pillar": "...", "cadence": "...", "voice": "...",
+  "strategic_recommendations": "...",  # from prior consultation if production mode
+}
+
+Task(
+  subagent_type="general-purpose",
+  description="<operator-name> <consultation|production> mode",
+  prompt=f"""
+You are this operator. Use the voice, frameworks, and signature moves below:
+
+---
+{operator_content}
+---
+
+Now run a {consultation|production} on this campaign context:
+
+{json.dumps(context, indent=2)}
+
+Return structured output:
+{schema for consultation OR schema for production post}
+"""
+)
+```
+
+**Critical** : le subagent reçoit le `prompt.md` complet de l'operator (donc adopte sa voice + frameworks + anti-patterns) ET le contexte stratégique. C'est ce qui transforme un LLM générique en operator-incarné fonctionnel.
+
+## Channel → Operator/Framework routing table (v1.2.0 paths)
+
+**v1.2.0 BREAKING change** : les "operator skills" sont maintenant des **prompts internes** (non-skills) sous `prompts/`, lus via Read+Task tool au lieu de cascade `/skill:name`. Chaque routing pointe vers le `prompt.md` du sous-dossier correspondant.
+
+### Organic channels
+
+| Channel | Prompt path (Read + Task) | Type |
 |---|---|---|
-| X / Twitter (organic) | `promote-x-mastery` | Operator |
-| LinkedIn (organic) | `promote-welsh-linkedin` | Operator |
-| Newsletter / Email (volume + paid acq) | `promote-mcgarry-newsletter` | Operator |
-| Substack premium / paid sub | `promote-lenny-substack` | Operator |
-| Founder-led cross-channel | `promote-gerhardt-founder` | Operator |
-| YouTube long-form | `promote-mrbeast` | Operator |
-| TikTok / Reels / Shorts (organic) | `promote-hormozi-shortform` | Operator |
-| Instagram organic (Feed/Stories/Carousels) | `promote-johnson-instagram` | Operator |
-| Discord / Slack / community | `promote-isenberg-community` | Operator |
-| Podcast (host + guest strategy) | `promote-ferriss-podcast` | Operator |
-| Cold/Warm B2B Outbound | `promote-robinson-outbound` | Operator |
-| SEO / GEO content | `promote-indig-geo-seo` | Operator |
-| Reddit organic | `references/channel-reddit.md` | Framework |
+| X / Twitter (organic) | `prompts/personas/x-mastery/prompt.md` | Persona-incarnée |
+| LinkedIn (organic) | `prompts/operators/welsh-linkedin/prompt.md` | Operator |
+| Newsletter / Email (volume + paid acq) | `prompts/operators/mcgarry-newsletter/prompt.md` | Operator |
+| Substack premium / paid sub | `prompts/operators/lenny-substack/prompt.md` | Operator |
+| Founder-led cross-channel | `prompts/personas/gerhardt-founder/prompt.md` | Persona |
+| YouTube long-form | `prompts/personas/mrbeast/prompt.md` | Persona-incarnée |
+| TikTok / Reels / Shorts (organic) | `prompts/operators/hormozi-shortform/prompt.md` | Operator |
+| Instagram organic (Feed/Stories/Carousels) | `prompts/operators/johnson-instagram/prompt.md` | Operator |
+| Discord / Slack / community | `prompts/operators/isenberg-community/prompt.md` | Operator |
+| Podcast (host + guest strategy) | `prompts/operators/ferriss-podcast/prompt.md` | Operator |
+| Cold/Warm B2B Outbound | `prompts/operators/robinson-outbound/prompt.md` | Operator |
+| SEO / GEO content | `prompts/operators/indig-geo-seo/prompt.md` | Operator |
+| Reddit organic | `references/channel-reddit.md` | Framework (read directly) |
 | HN + Product Hunt + Indie Hackers launches | `references/channel-hn-and-launches.md` | Framework |
 | Facebook organic | `references/channel-facebook.md` | Framework |
 | Pinterest organic | `references/channel-pinterest-organic.md` | Framework |
 | Threads/Bluesky/Mastodon/WhatsApp/Telegram | `references/channel-emerging-platforms-2026.md` | Framework |
-| Meta Ads (FB + IG paid) | `promote-faris-meta-and-fundamentals` | Operator |
-| Google PMax + Shopping | `promote-ryan-pmax` | Operator |
-| Google Search + PPC | `promote-vallaeys-google` | Operator |
-| LinkedIn Ads | `promote-wilcox-linkedin-ads` | Operator |
-| TikTok Ads + Snapchat | `promote-sanchez-tiktok` | Operator |
-| Amazon Ads + YouTube Ads | `promote-curry-amazon-youtube` | Operator |
-| Mobile UA / iOS14 attribution | `promote-seufert-mobile-attribution` | Operator (consultation focus) |
+
+### Paid channels
+
+| Channel | Prompt path | Type |
+|---|---|---|
+| Meta Ads (FB + IG paid) | `prompts/operators/faris-meta-and-fundamentals/prompt.md` | Operator |
+| Google PMax + Shopping | `prompts/operators/ryan-pmax/prompt.md` | Operator |
+| Google Search + PPC | `prompts/operators/vallaeys-google/prompt.md` | Operator |
+| LinkedIn Ads | `prompts/operators/wilcox-linkedin-ads/prompt.md` | Operator |
+| TikTok Ads + Snapchat | `prompts/operators/sanchez-tiktok/prompt.md` | Operator |
+| Amazon Ads + YouTube Ads | `prompts/operators/curry-amazon-youtube/prompt.md` | Operator |
+| Mobile UA / iOS14 attribution | `prompts/operators/seufert-mobile-attribution/prompt.md` | Operator (consultation focus) |
 | X / Reddit / Pinterest paid | `references/channel-paid-x-reddit-pinterest.md` | Framework |
 | CTV / Retail Media / TikTok Shop / DOOH | `references/channel-paid-emerging-2026.md` | Framework |
 | Affiliate / B2B sponsorships / Podcast Ads / Email Ads | `references/channel-paid-other-niches.md` | Framework |
+
+### Foundations (P3.A, used by strategist directly)
+
+| Function | Prompt path | Type |
+|---|---|---|
+| Offer audit (Hormozi) | `prompts/personas/hormozi/prompt.md` | Persona-incarnée |
+| Awareness stages (Schwartz) | `prompts/personas/schwartz/prompt.md` | Persona-incarnée |
+| Contrarian reframe (Ammar) | `prompts/personas/ammar/prompt.md` | Persona-incarnée |
+| Distribution philosophy (PG) | `prompts/personas/paul-graham/prompt.md` | Persona-incarnée |
+| Vision/product clarity (Steve Jobs) | `prompts/personas/steve-jobs/prompt.md` | Persona-incarnée |
+| Earned media + perennial (Holiday) | `prompts/personas/holiday/prompt.md` | Persona-incarnée |
+| Cialdini levers | `prompts/frameworks/cialdini/prompt.md` | Framework |
+| Voss negotiation | `prompts/frameworks/voss/prompt.md` | Framework |
+| Dunford positioning | `prompts/frameworks/dunford-positioning/prompt.md` | Framework |
+| JTBD-Switch | `prompts/frameworks/jtbd-switch/prompt.md` | Framework |
+| Growth Four-Fits | `prompts/frameworks/growth-four-fits/prompt.md` | Framework |
+| PLG-Design | `prompts/frameworks/plg-design/prompt.md` | Framework |
+| GEO-Optimization | `prompts/frameworks/geo-optimization/prompt.md` | Framework |
+| AI-Content-Pipeline | `prompts/frameworks/ai-content-pipeline/prompt.md` | Framework |
+| Customer research | `prompts/tactical/customer-research/prompt.md` | Tactical |
+| Pricing strategy | `prompts/tactical/pricing-strategy/prompt.md` | Tactical |
+| Channel-strategist (orchestrator) | `prompts/orchestrators/channel-strategist/prompt.md` | Orchestrator |
 
 ## Format du post produit (template `templates/post.md.template`)
 

@@ -14,8 +14,8 @@ description: |
   post creation (delegate directly to the channel's operator).
 license: MIT
 metadata:
-  author: François Neumann (claude_promote orchestrator)
-  version: 0.1.0
+  author: François Neumann (promote orchestrator)
+  version: 1.2.0
 ---
 
 # promote-content-batcher · Sub-école C — Scoped surgeon
@@ -26,10 +26,22 @@ metadata:
 
 This skill is a **scoped surgeon** standalone, invoked AFTER `promote-strategist` has produced a campaign with calendar containing some `status=outline` slots.
 
-- **Runs AFTER**: `promote-strategist` v1.1.0 (which produces J0-J13 concrete + J14-J89 outlines).
+- **Runs AFTER**: `promote-strategist` v1.2.0 (which produces J0-J13 concrete + J14-J89 outlines).
 - **Runs BEFORE**: `promote-executor` (which posts the concretes).
-- **Reads from**: `campaigns/{slug}/STATE.yaml`, `campaigns/{slug}/strategy/*` (all strategy files), `campaigns/{slug}/strategy/operator-consultations/*.md` (CRITICAL — without these, generates generic content), `campaigns/{slug}/strategy/11-content-calendar-90d.csv`.
+- **Reads from**: `campaigns/{slug}/STATE.yaml`, `campaigns/{slug}/strategy/*` (all strategy files), `campaigns/{slug}/strategy/operator-consultations/*.md` (CRITICAL — without these, generates generic content), `campaigns/{slug}/strategy/11-content-calendar-90d.csv`, AND `prompts/{operators,personas,...}/{name}/prompt.md` (operator prompts read via Read tool, then injected in Task subagent for production).
 - **Writes to**: `campaigns/{slug}/content/posts/{date}-{channel}-{pillar}.md` + updates calendar `status=concrete`.
+
+## v1.2.0 — Read + Task pattern (BREAKING change vs v1.1.0)
+
+You no longer invoke `/skill:promote-welsh-linkedin` etc. (those skills don't exist as skills anymore in v1.2.0). Instead, you :
+
+1. Identify the operator/framework path from `../../references/content-production.md` routing table (file paths under `prompts/`).
+2. Read the `prompt.md` content of the operator.
+3. Spawn a `Task` subagent with the operator content + the slot's context (pillar + cadence + voice + slot.hypothesis + strategic_recommendations from P3.C consultation + anti_patterns).
+4. The subagent returns title + body + assets_specs + posting_metadata in the operator's voice.
+5. Save to `campaigns/{slug}/content/posts/{date}-{channel}-{pillar}.md` (cf. `templates/post.md.template`).
+
+The two-pass semantics are unchanged from v1.1.0 — only the invocation API differs. Operator strategic consultations stored in `strategy/operator-consultations/` from P3.C are still consumed (they contain the cadence/anti-patterns/recommendations that P4 + this batcher inject when calling the operator in PRODUCTION mode).
 
 ## Identity
 

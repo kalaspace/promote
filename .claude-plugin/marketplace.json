@@ -5,15 +5,15 @@
     "email": "francois.neumann@flex.eu"
   },
   "metadata": {
-    "description": "Promote: 39-skill stack for end-to-end product promotion strategy with two-pass orchestration. Channel-strategist proposes channels actively (organic + paid). 19 world-class operator skills (Welsh, McGarry, Lenny, Ferriss, Robinson, Isenberg, Brock Johnson, Indig, Hormozi-shortform, Gerhardt, Faris, Wilcox, Mike Ryan, Vallaeys, Seufert, Sanchez, Curry + Hormozi/MrBeast/x-mastery existing) consulted in strategic mode, then production mode for 14 days of concrete content. promote-content-batcher converts the 76 remaining outlines on demand.",
-    "version": "1.1.0"
+    "description": "Promote v1.2.0 — 2 entry points (strategist + content-batcher) backed by 37 internal expert prompts (operators, frameworks, personas) for zero system-prompt pollution. Two-pass orchestration: channels proposed actively (organic + paid), 17 world-class operators consulted in strategic mode then production mode. 14 days concrete content + 76 days outlines convertible on demand via content-batcher.",
+    "version": "1.2.0"
   },
   "plugins": [
     {
       "name": "promote",
       "source": "./",
-      "description": "v1.1.0 — 39 skills (19 operators + 6 framework skills + 12 personas + 2 orchestrators) + 20 references for end-to-end promotion strategy. Coverage: organic (X, LinkedIn, Newsletter, Substack, Founder, SEO/GEO, TikTok/Reels/Shorts, Instagram, Discord, Podcast, Outbound, YouTube long-form, Reddit, HN/launches, Facebook, Pinterest organic, emerging) + paid (Meta, Google PMax, Google Search/PPC, Mobile/iOS14, TikTok/Snapchat, Amazon/YouTube, LinkedIn Ads, X+Reddit+Pinterest paid, emerging paid).",
-      "version": "1.1.0",
+      "description": "v1.2.0 BREAKING — Only 2 skills exposed (promote-strategist + promote-content-batcher). 37 internal expert prompts under prompts/ invoked via Read+Task tool (operators: Welsh, McGarry, Lenny, Ferriss, Robinson, Isenberg, Johnson, Indig, Hormozi-shortform, Gerhardt, Faris, Wilcox, Ryan-PMax, Vallaeys, Seufert, Sanchez, Curry; personas: Hormozi, Schwartz, Holiday, Ammar, Paul Graham, X-Mastery, MrBeast, Steve Jobs; frameworks: JTBD, Dunford, Cialdini, Voss, Four-Fits, PLG, GEO, AI-Content; tactical: customer-research, pricing). Coverage: organic + paid channels, content production 14d + on-demand batching.",
+      "version": "1.2.0",
       "category": "marketing"
     }
   ]

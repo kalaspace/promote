@@ -2,6 +2,55 @@
 
 All notable changes to promote (the `promote` plugin).
 
+## [1.2.0] — 2026-04-30 — **BREAKING — Hide internal skills**
+
+### Why this release
+
+Real-test feedback after v1.1.0 shipped : 39 skills `promote-*` polluted Claude's system prompt. The user reported wanting only 1 entry point (`promote-strategist`) exposed and the 38 others invisible / used only as internals by the orchestrator.
+
+### Research finding (verified April 2026)
+
+**No official mechanism exists in Claude Code 2026 to hide skills inside a plugin.** Verified via :
+- Doc : `code.claude.com/docs/en/skills`, `code.claude.com/docs/en/plugins-reference`
+- GitHub issues : anthropics/claude-code#22345 (`disable-model-invocation` ignored for plugin skills), #43875 (#19141 (`user-invocable: false` does the inverse — hides from `/` menu but skill remains exposed in system prompt).
+- Practice : `anthropics/skills`, `obra/superpowers`, `wshobson/agents` all expose every skill (the latter resolves by 72 micro-plugins).
+
+### Workaround applied : files outside `skills/`
+
+The 37 sub-skills are now **internal prompts** under `prompts/{operators,orchestrators,personas,frameworks,tactical,utility}/{name}/prompt.md`. This directory is NOT scanned by Claude Code as a skills directory, so the prompts are invisible in the system prompt. The 2 exposed entry points (`promote-strategist` + `promote-content-batcher`) invoke them via **Read + Task tool** instead of the v1.1.0 cascade `/skill:name`.
+
+The two-pass orchestration semantics (consultation in P3.C/F, production in P4) are unchanged. Operator consultations still saved to `campaigns/{slug}/strategy/operator-consultations/{name}.md`. Only the invocation API differs.
+
+### BREAKING : Direct invocation of sub-skills no longer works
+
+If you were invoking `/promote:welsh-linkedin`, `/promote:hormozi`, etc. directly in v1.1.0, this no longer works in v1.2.0. Use `promote-strategist` (which orchestrates all 37 internals via Read+Task) or fork the plugin and adapt.
+
+### Restructure summary
+
+- **Moved** : 37 directories `skills/promote-*/` → `prompts/{category}/{name}/`
+  - 16 operators v1.1 → `prompts/operators/`
+  - 1 channel-strategist → `prompts/orchestrators/`
+  - 9 personas (Hormozi, Ammar, Paul Graham, X-Mastery, MrBeast, Steve Jobs, Schwartz, Holiday, Gerhardt-Founder) → `prompts/personas/`
+  - 8 frameworks (JTBD, Dunford, Cialdini, Voss, Four-Fits, PLG, GEO, AI-Content) → `prompts/frameworks/`
+  - 2 tactical (customer-research, pricing-strategy) → `prompts/tactical/`
+  - 1 utility (huashu-nuwa) → `prompts/utility/`
+- **Renamed** : `SKILL.md` → `prompt.md` in all 37 dirs. Removed `name:` field from frontmatter (no longer skills).
+- **Kept in `skills/`** : `promote-strategist`, `promote-content-batcher` (the 2 exposed entry points).
+- **install.sh** : now creates 2 symlinks (vs 39 in v1.1.0).
+- **content-production.md** : routing table updated (skill names → file paths).
+- **delegation-matrix.md** : cascade pattern Read+Task documented (replaces v1.1.0 cascade `/skill:name`).
+- **plugin.json + marketplace.json** : version 1.2.0, descriptions updated.
+
+### Migration
+
+Existing campaigns continue to work (artifacts under `campaigns/{slug}/` are untouched). New campaigns use the v1.2.0 invocation pattern automatically. To upgrade an existing v1.1.0 campaign: re-run `promote-strategist --resume`. The strategist detects that operator consultations exist and consumes them via the new pattern.
+
+### Cleanup possible if Anthropic adds official `internal: true` flag
+
+If Claude Code 2026/2027 ships an official mechanism (e.g., `internal: true` in SKILL.md frontmatter), migration back is trivial: `mv prompts/{category}/{name}/ skills/promote-{name}/` + add `name:` and `internal: true` to frontmatter. v1.2.0 is reversible.
+
+---
+
 ## [1.1.0] — 2026-04-29
 
 Major release based on real-test feedback (v1.0.0 deployed and tested on a real product). Two structural gaps were identified:

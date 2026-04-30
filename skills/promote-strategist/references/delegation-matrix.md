@@ -11,62 +11,137 @@ The strategist constructs the prompt by template-filling from `STATE.known_facts
 - **Mode CONSULTATION** (used in P3.C and P3.F): operator gives strategic verdict, NOT content production. Output structured: `feasibility_score`, `strategic_recommendations`, `cadence_proposed`, `content_pillar_adjustments`, `prerequisites_or_blockers`, `anti_patterns`, `recommended_skip_or_defer`.
 - **Mode PRODUCTION** (used in P4 Content Production): operator generates concrete content (titles, bodies, assets specs).
 
-Cascading routing per channel — see `../../../references/content-production.md` for the complete table (channel → operator/framework). Excerpt below:
+Routing per channel — see `../../../references/content-production.md` for the complete table (channel → prompt path). Operators and personas are NOT skills anymore (v1.2.0 BREAKING) — they live under `prompts/{operators,orchestrators,personas,frameworks,tactical,utility}/{name}/prompt.md` and are invoked via **Read + Task tool**.
 
 ```
-ORGANIC operators (10):
-  X/Twitter             → promote-x-mastery
-  LinkedIn              → promote-welsh-linkedin
-  YouTube long-form     → promote-mrbeast
-  YouTube/TikTok/Reels  → promote-hormozi-shortform
-  Newsletter (volume)   → promote-mcgarry-newsletter
-  Substack premium      → promote-lenny-substack
-  Founder cross-channel → promote-gerhardt-founder
-  Podcast               → promote-ferriss-podcast
-  Cold/Warm B2B         → promote-robinson-outbound
-  Discord/Community     → promote-isenberg-community
-  Instagram organic     → promote-johnson-instagram
-  SEO/GEO               → promote-indig-geo-seo
+INVOCATION PATTERN v1.2.0 (Read + Task) :
 
-PAID operators (7):
-  Meta Ads + paid fundamentals → promote-faris-meta-and-fundamentals
-  LinkedIn Ads          → promote-wilcox-linkedin-ads
-  Google PMax           → promote-ryan-pmax
-  Google Search/PPC     → promote-vallaeys-google
-  Mobile/iOS14 attribution → promote-seufert-mobile-attribution
-  TikTok/Snapchat       → promote-sanchez-tiktok
-  Amazon/YouTube Ads    → promote-curry-amazon-youtube
+  1. Read prompts/{category}/{name}/prompt.md → operator_content
+  2. Spawn Task(subagent_type="general-purpose", prompt=operator_content + context + mode_instruction)
+  3. Subagent returns structured output (consultation or production)
+  4. Strategist saves to operator-consultations/{name}.md or content/posts/...
 
-FRAMEWORKS (8) — read directly, no consultation:
+Channel routing (excerpt — full table in references/content-production.md) :
+
+ORGANIC :
+  X/Twitter             → prompts/personas/x-mastery/prompt.md
+  LinkedIn organic      → prompts/operators/welsh-linkedin/prompt.md
+  YouTube long-form     → prompts/personas/mrbeast/prompt.md
+  TikTok/Reels/Shorts   → prompts/operators/hormozi-shortform/prompt.md
+  Newsletter (volume)   → prompts/operators/mcgarry-newsletter/prompt.md
+  Substack premium      → prompts/operators/lenny-substack/prompt.md
+  Founder cross-channel → prompts/personas/gerhardt-founder/prompt.md
+  Podcast               → prompts/operators/ferriss-podcast/prompt.md
+  Cold/Warm B2B         → prompts/operators/robinson-outbound/prompt.md
+  Discord/Community     → prompts/operators/isenberg-community/prompt.md
+  Instagram organic     → prompts/operators/johnson-instagram/prompt.md
+  SEO/GEO               → prompts/operators/indig-geo-seo/prompt.md
+
+PAID :
+  Meta Ads              → prompts/operators/faris-meta-and-fundamentals/prompt.md
+  LinkedIn Ads          → prompts/operators/wilcox-linkedin-ads/prompt.md
+  Google PMax           → prompts/operators/ryan-pmax/prompt.md
+  Google Search/PPC     → prompts/operators/vallaeys-google/prompt.md
+  Mobile/iOS14          → prompts/operators/seufert-mobile-attribution/prompt.md
+  TikTok/Snapchat Ads   → prompts/operators/sanchez-tiktok/prompt.md
+  Amazon/YouTube Ads    → prompts/operators/curry-amazon-youtube/prompt.md
+
+CHANNEL-STRATEGIST (orchestrator) :
+  Channel mix proposal  → prompts/orchestrators/channel-strategist/prompt.md
+
+FOUNDATIONS (P3.A) :
+  Hormozi offer audit   → prompts/personas/hormozi/prompt.md
+  Schwartz awareness    → prompts/personas/schwartz/prompt.md
+  Ammar contrarian      → prompts/personas/ammar/prompt.md
+  PG distribution       → prompts/personas/paul-graham/prompt.md
+  Steve Jobs vision     → prompts/personas/steve-jobs/prompt.md
+  Holiday earned media  → prompts/personas/holiday/prompt.md
+  Cialdini levers       → prompts/frameworks/cialdini/prompt.md
+  Voss negotiation      → prompts/frameworks/voss/prompt.md
+  Dunford positioning   → prompts/frameworks/dunford-positioning/prompt.md
+  JTBD-Switch           → prompts/frameworks/jtbd-switch/prompt.md
+  Four-Fits             → prompts/frameworks/growth-four-fits/prompt.md
+  PLG-Design            → prompts/frameworks/plg-design/prompt.md
+  GEO-Optimization      → prompts/frameworks/geo-optimization/prompt.md
+  AI-Content-Pipeline   → prompts/frameworks/ai-content-pipeline/prompt.md
+  Customer research     → prompts/tactical/customer-research/prompt.md
+  Pricing strategy      → prompts/tactical/pricing-strategy/prompt.md
+
+FRAMEWORK references (8) — read directly, NO Task spawn:
   Reddit, HN+launches, Facebook, Pinterest-organic, Emerging-platforms,
   Paid-X-Reddit-Pinterest, Paid-emerging-2026, Paid-other-niches.
+  → references/channel-{name}.md (read inline, generate via strategist's own LLM)
 ```
 
-**Strategic-consultation invocation prompt template (reused for every operator)**:
+**Strategic-consultation Read+Task pattern v1.2.0** (reused for every operator/persona) :
 
+```python
+# Step 1: Read the operator/persona prompt
+operator_path = "prompts/operators/welsh-linkedin/prompt.md"  # from routing table above
+operator_content = Read(operator_path)
+
+# Step 2: Build context payload (the 7 strategic inputs)
+context = {
+  "product_brief": <00-product-brief.md résumé>,
+  "icp": <STATE.icp_real>,
+  "jtbd": <02-jtbd-switch.md résumé>,
+  "positioning": <03-positioning.md résumé + Ammar contrarian>,
+  "awareness_stage": <04-offer-audit.md awareness section>,
+  "goal_90d": <STATE.primary_goal>,
+  "constraints": <STATE.budget_constraints>
+}
+
+# Step 3: Spawn subagent with operator voice + context + consultation directive
+Task(
+  subagent_type="general-purpose",
+  description=f"{operator_name} strategic consultation",
+  prompt=f"""You are this operator. Adopt the voice, frameworks, signature moves, and anti-patterns described below. Speak in first person ("I"), match the cadence DNA, never paraphrase yourself in third person.
+
+OPERATOR PROMPT (your full identity + frameworks):
+
+---
+{operator_content}
+---
+
+NOW RUN A STRATEGIC CONSULTATION on this campaign context:
+
+Product : {context['product_brief']}
+ICP : {context['icp']}
+JTBD : {context['jtbd']}
+Positioning : {context['positioning']}
+Awareness stage : {context['awareness_stage']}
+Goal 90d : {context['goal_90d']}
+Constraints : {context['constraints']}
+
+Return STRICTLY this Markdown structure:
+
+## feasibility_score
+{{1-10}}
+
+## strategic_recommendations
+- {{3-5 actionable bullets}}
+
+## cadence_proposed
+{{concrete cadence}}
+
+## content_pillar_adjustments
+{{how to adapt pillars for this channel}}
+
+## prerequisites_or_blockers
+- {{what must exist before posting}}
+
+## anti_patterns
+- {{do-not-do for this product/audience}}
+
+## recommended_skip_or_defer
+{{if feasibility < 5: explanation. Else: 'retain'}}
+"""
+)
 ```
-Invoke promote-{operator} in STRATEGIC-CONSULTATION mode (not production).
 
-Context:
-- Product brief : {00-product-brief.md résumé}
-- ICP : {STATE.icp_real}
-- JTBD : {02-jtbd-switch.md résumé}
-- Positioning : {03-positioning.md résumé + Ammar contrarian}
-- Awareness stage : {04-offer-audit.md awareness section}
-- Goal 90j : {STATE.primary_goal}
-- Budget/effort constraint : {STATE.budget_constraints}
+**Save consultation output** to `campaigns/{slug}/strategy/operator-consultations/{operator-name}.md`. Sémantique inchangée vs v1.1.0 — seul le mode d'invocation change (Read+Task au lieu de cascade `/skill:name`).
 
-Question: Given the above, is {channel} a good fit for this campaign?
-
-Output structured (Markdown):
-1. feasibility_score (1-10)
-2. strategic_recommendations (3-5 bullets)
-3. cadence_proposed (concrete: e.g., "5x/sem long-form + 1 carrousel/sem")
-4. content_pillar_adjustments (how to adapt pillars for this channel)
-5. prerequisites_or_blockers (what must exist before posting)
-6. anti_patterns (do-not-do for this product/audience)
-7. recommended_skip_or_defer (if feasibility < 5, why)
-```
+**Production mode** : même pattern Read+Task, juste avec un prompt different qui demande au subagent de produire title + body + assets_specs au lieu de la consultation structurée.
 
 **Save consultation output** to `campaigns/{slug}/strategy/operator-consultations/{operator-name}.md`. Critical for P4 production AND content-batcher.
 

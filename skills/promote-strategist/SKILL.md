@@ -6,7 +6,7 @@ description: |
 license: MIT
 metadata:
   author: François Neumann (promote orchestrator)
-  version: 1.1.0
+  version: 1.2.0
 ---
 
 # promote-strategist · Orchestrator (Sub-school A — Kitchen-sink)
@@ -19,8 +19,21 @@ This skill is the **entry point** of the `promote` system, Part 1. It orchestrat
 
 - **Runs FIRST** in any campaign.
 - **Runs BEFORE**: `promote-executor` (Part 2, to come) — which consumes `strategy/handoff-to-executor.yaml`.
-- **Reads from**: 11 references docs + 18 sub-skills.
+- **Reads from**: 20 references docs + 37 internal prompts under `prompts/{operators,orchestrators,personas,frameworks,tactical,utility}/{name}/prompt.md` (invoked via Read + Task, not as Claude Code skills).
 - **Writes to**: `campaigns/{campaign-id}/` (a per-campaign state directory).
+
+## v1.2.0 — Internal prompts via Read + Task (BREAKING change vs v1.1.0)
+
+The 37 sub-skills that were previously installed as `/skill:promote-X` (cascade pattern) are now **internal prompts** under `prompts/`. They are NOT skills anymore — they are markdown files that you (the strategist) read with the Read tool and inject into Task subagents to spawn operator-incarnated workers.
+
+This change keeps the user's Claude system prompt clean (only 2 skills exposed: `promote-strategist` + `promote-content-batcher`) and prevents direct invocation of internal operators by the user.
+
+The two-pass orchestration (consultation in P3.C/F + production in P4) is **semantically unchanged**. Only the invocation API differs:
+
+- v1.1.0 : `Invoke promote-welsh-linkedin in strategic-consultation mode...`
+- v1.2.0 : `Read prompts/operators/welsh-linkedin/prompt.md → Task subagent with that content + context`
+
+See `./references/delegation-matrix.md` for the full Read+Task pattern.
 
 ## Identity
 
