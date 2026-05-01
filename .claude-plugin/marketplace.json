@@ -5,15 +5,15 @@
     "email": "francois.neumann@flex.eu"
   },
   "metadata": {
-    "description": "Promote v1.3.0 — Quality + Verification + Lean. Adds verified-claims ledger (P1.5 extracts factual claims, user validates in 15 min, blocks ~70-80% of operator hallucinations), Quality Gate #7 (factual claims fact-check vs ledger) + #8 (reader-honesty ≥70% reader-first), output schema split (.md pure content + .meta.yaml metadata), aggressive P3 trim (cut Geo-Plan + Rumelt-Aval default = -25% tokens P3). 2 entry points exposed + 37 internal prompts under anti-fabrication contract.",
-    "version": "1.3.0"
+    "description": "Promote v1.4.0 — Source-Truth Ledger + Single-Run. NEW phase P0.5 ingests the product itself as source-of-truth for STRUCTURE+EXAMPLES claims (prevents adjacent stories that aren't IN the product). Quality Gate #7 enriched (#7.1 product grounding, #7.2 structural reference match hard-fail, #7.3 anecdote source). Single-run P4 produces full configured window (default 90 days, --days N flag) — content-batcher skill deleted. 1 entry point + 38 internal prompts under dual contract (anti-fabrication + product-promotion).",
+    "version": "1.4.0"
   },
   "plugins": [
     {
       "name": "promote",
       "source": "./",
-      "description": "v1.3.0 BREAKING — Adds Verified Claims Ledger (phase P1.5) to prevent fabrication, Quality Gates #7 (fact-check) + #8 (reader-honesty), output schema split (pure content `.md` + `.meta.yaml`), aggressive P3 trim (cut 09-geo-plan + p3g-rumelt-aval default, replace 10-instrumentation full by 10-tripwires-top3, replace 11-content-calendar-90d by 11-content-calendar-14d-then-outline). 2 skills exposed (promote-strategist + promote-content-batcher) backed by 37 internal prompts under prompts/ (operators: Welsh, McGarry, Lenny, Ferriss, Robinson, Isenberg, Johnson, Indig, Hormozi-shortform, Gerhardt, Faris, Wilcox, Ryan-PMax, Vallaeys, Seufert, Sanchez, Curry; personas: Hormozi, Schwartz, Holiday, Ammar, Paul Graham, X-Mastery, MrBeast, Steve Jobs, Gerhardt; frameworks: JTBD, Dunford, Cialdini, Voss, Four-Fits, PLG, GEO, AI-Content; tactical: customer-research, pricing; utility: claims-extractor, fact-checker, reader-honesty-judge, huashu-nuwa). All 34 internal prompts now bound by `references/anti-fabrication-contract.md`.",
-      "version": "1.3.0",
+      "description": "v1.4.0 BREAKING — Source-Truth Ledger + Single-Run. NEW phase P0.5 PRODUCT CONTENT INGESTION (subagent product-content-ingester ingests product TOC/docs/syllabus into intake/product-content.md as source-of-truth). NEW STRUCTURE/EXAMPLES claim categories (sourced EXCLUSIVELY from product-content.md, not from author interviews — prevents v1.3.0 fabrication of inferred chapters). NEW must_quote_from field in operator-consultations P3.C. NEW Quality Gate #7 sub-checks #7.1/#7.2/#7.3 (product grounding + structural reference match hard-fail + anecdote source). DELETED content-batcher skill (folded into strategist). NEW single-run P4 produces full configured window. 1 skill exposed (promote-strategist) backed by 38 internal prompts (16 operators + 9 personas + 8 frameworks + 1 orchestrator + 4 utility incl. NEW product-content-ingester). Dual contract (anti-fabrication v1.3.0 + product-promotion v1.4.0) bound to 34 internal prompts via references/anti-fabrication-contract.md.",
+      "version": "1.4.0",
       "category": "marketing"
     }
   ]

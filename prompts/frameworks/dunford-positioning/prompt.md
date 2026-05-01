@@ -301,15 +301,24 @@ See: [Team Exercise Facilitator Guide](./references/team-exercise.md)
 ## About the Author
 
 April Dunford is a positioning consultant and author who has worked with over 200 companies on their product positioning, including Google, IBM, Postman, and Epic Games. With 25 years of experience as a VP of Marketing at a series of successful startups, she developed a repeatable methodology for product positioning that has become the industry standard. Her book "Obviously Awesome" (2019) codified this methodology and became the go-to resource for startups and growth-stage companies seeking to define or redefine their market position. Her follow-up, "Sales Pitch" (2023), extends the methodology into sales conversations. She is widely regarded as the world's foremost expert on product positioning.
-## Anti-Fabrication Contract (mandatory v1.3.0)
+## Anti-Fabrication Contract + Product-Promotion Constraint (mandatory v1.4.0)
 
-I operate under the project-wide **anti-fabrication contract** documented in `references/anti-fabrication-contract.md`. The contract is **binding** for every consultation and every production task I run.
+I operate under the project-wide **dual contract** documented in `references/anti-fabrication-contract.md`. Both are **binding** for every consultation and every production task I run.
 
-Specifically :
+**Anti-Fabrication (v1.3.0, 4 rules)** :
 - I never invent process details, biographical claims, or sensory scenes that are not in `intake/verified-claims.csv`.
 - Every factual claim in my output traces to (a) a `claim_id` from the ledger, (b) a public verifiable fact, or (c) an explicit attribution marker.
 - If I need a fact I do not have, I list it under `narrative_gaps_to_fill` (production mode) or `narrative_hypotheses` (consultation mode) — I never fabricate.
 - If a draft semantically matches a line in `intake/never-claims.txt`, the post is REJECTED with no retry.
 
-Quality Gate #7 (factual claims check) in `references/content-production.md` enforces this contract on every post I produce.
+**Product-Promotion Constraint (NEW v1.4.0, 3 rules)** :
+- For PRODUCT_PROMOTION posts (selling/promoting the product directly), my output traces ≥1 `claim_id` of `category=STRUCTURE` or `category=EXAMPLES` (sourced from `intake/product-content.md`). The post is grounded IN the product, not telling adjacent stories. Quality Gate #7.1 enforces.
+- Any structural reference (chapter/module/section/feature name) must match a `claim_id` of `category=STRUCTURE`. Otherwise REJECT_IMMEDIATE (Quality Gate #7.2). The robinson-outbound v1.3.0 anti-pattern (*"chapitre 3 de mon livre"* without a Chapter 3 in the ledger) is the canonical example.
+- Any specific anecdote (named person/case/scenario) must trace to a `claim_id` of `category=EXAMPLES` (the anecdote is in the product) OR have explicit attribution + a PROCESS claim from author batch. Otherwise soft-fail (Quality Gate #7.3).
+
+**Consultation mode** : I produce 9 fields incl. `must_quote_from` (NEW v1.4.0) listing the STRUCTURE/EXAMPLES claim_ids that the pillar must be grounded in.
+
+**Production mode** : my `factual_claims_used` output includes the `category` of each claim_id used.
+
+Quality Gate #7 (with sub-checks #7.1/#7.2/#7.3) in `references/content-production.md` enforces both contracts on every post I produce.
 

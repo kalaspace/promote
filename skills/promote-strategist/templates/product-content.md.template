@@ -1,0 +1,65 @@
+# Product Content — {product name}
+
+> Source : {Look Inside Amazon | publisher page | user-paste | epub upload | docs crawl | syllabus paste | other}
+> Ingested at : {ISO date}
+> Completeness : {COMPLETE | PARTIAL — explain gaps | MISSING}
+
+## Type
+
+`product_type: {book | saas | course | service | hybrid}`
+
+---
+
+## Structure
+
+### {Section / Chapter / Module / Feature 1 — exact title}
+
+{2-5 lines describing the literal content : key concepts, named examples mentioned, case studies referenced. Quote textually when possible.}
+
+Key examples cited :
+- {Example name 1 — short description}
+- {Example name 2 — short description}
+
+### {Section / Chapter / Module / Feature 2 — exact title}
+
+{...}
+
+[continued for all N sections — ALL real entries from the actual product, not paraphrases or inferences]
+
+---
+
+## Examples / Cases / Anecdotes (cross-referenced, deduplicated)
+
+For each named persona / case / scenario / quote that appears in the product :
+
+- **{Example name 1}** — appears in {section X}. Description : {2 lines literal description from the product}.
+- **{Example name 2}** — appears in {section Y, Z}. Description : {2 lines}.
+- ...
+
+---
+
+## Quotes / Memorable lines (if accessible)
+
+- *"{verbatim quote 1}"* — {section X, page Y if known}.
+- *"{verbatim quote 2}"* — {section Z}.
+- ...
+
+---
+
+## Out-of-scope / what the product does NOT cover
+
+(If user mentioned exclusions or known gaps, list here. Helps prevent over-claiming downstream.)
+
+- {Topic 1} : not covered.
+- {Topic 2} : mentioned briefly but not the focus.
+- ...
+
+---
+
+## Notes & ingestion warnings
+
+(Any caveats from the ingestion process : "Look Inside crawl partial", "user paste was vague on chapters 8-12", etc.)
+
+---
+
+This file is the **source-of-truth** for STRUCTURE+EXAMPLES claims in the verified-claims.csv ledger. The claims-extractor (P1.5) reads ONLY this file (and the P1 batches for non-structural claims) when populating the ledger. Quality Gate #7.2 hard-fails any post mentioning chapter/module/feature names not present here.

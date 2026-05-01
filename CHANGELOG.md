@@ -2,6 +2,100 @@
 
 All notable changes to promote (the `promote` plugin).
 
+## [1.4.0] — 2026-05-01 — **BREAKING — Source-Truth Ledger + Single-Run**
+
+### Why this release
+
+Real-test feedback after v1.3.0 ran on the same campaign livre. Two new structural problems surfaced :
+
+1. **Le ledger n'a pas la bonne ground truth.** Verbatim user : *"soyons logique que pour un post sensé promouvoir un livre, cela n'a aucun sens que ce post contienne une autre histoire que le contenu du livre."* — Specific cases observed :
+   - `operator-consultations/robinson-outbound.md` proposes a template DM saying *"chapitre 3 de mon livre"* — there's no Chapter 3 in the ledger, this is a fabrication. Quality Gate #7 v1.3.0 didn't catch it because the template DM was never produced as a final post (latent fabrication).
+   - `verified-claims.csv` C029 listed 3 chapters ("prospection", "chiffrage industriel", "RH") inferred from author's batch interview answers — not validated TOC.
+   - The intake P1 asks ZERO questions about table of contents / structure.
+   - Insight : **the product itself** must be the source-of-truth, not the author's interview about the product.
+
+2. **Content-batcher complicates without practical value.** Verbatim user : *"il n'y a pas besoin d'économiser, je veux que strategist produise les post de la plage de temps prévue."* — Token analysis confirmed : feedback loop J+14 / pivot strat / idempotence reasons for keeping batcher were theoretical (never used in v1.3.0 campaign). Simplification > marginal token savings.
+
+### What v1.4.0 delivers (2 modules of patches)
+
+#### 10.A — Source-Truth Ledger
+
+- **NEW phase P0.5 — Product Content Ingestion** between P0 and P1. NEW subagent `prompts/utility/product-content-ingester/prompt.md` dispatches based on `product_type` (book/saas/course/service/hybrid) :
+  - `book` → Amazon Look Inside crawl / publisher page / ASK USER for TOC + chapter summaries.
+  - `saas` → multi-WebFetch on docs/features/pricing/changelog.
+  - `course` → course landing crawl / ASK USER for syllabus.
+  - `service` → ASK USER for offer descriptions + cases.
+- Output : `intake/product-content.md` (markdown structured) — becomes the source-of-truth for STRUCTURE+EXAMPLES claims.
+- **NEW claim categories** : `STRUCTURE` (chapter/module/feature names) and `EXAMPLES` (cases/anecdotes/quotes) — sourced EXCLUSIVELY from `intake/product-content.md` (NEVER inferred from author interviews).
+- **`prompts/utility/claims-extractor/prompt.md` patched** : reads `product-content.md` for STRUCTURE/EXAMPLES, refuses to extract these from batches.
+- **`prompts/utility/fact-checker/prompt.md` patched** : Quality Gate #7 enriched with 3 NEW sub-checks :
+  - **#7.1 Product grounding** : if `category=PRODUCT_PROMOTION`, require ≥1 STRUCTURE/EXAMPLES claim_id traced. SOFT-FAIL if not — "post not grounded in product content, adjacent story not allowed".
+  - **#7.2 Structural reference match** : chapter/module/feature names must match a STRUCTURE claim. REJECT_IMMEDIATE if not. Hard fail (no retry). v1.4.0 fix for v1.3.0 robinson-outbound bug.
+  - **#7.3 Anecdote source** : specific persons/cases/scenarios must match EXAMPLES claim or have explicit attribution + PROCESS claim. SOFT-FAIL if not.
+- **`references/anti-fabrication-contract.md` enriched** with Product-Promotion Constraint section (3 new rules : Règles 5-6-7).
+- **34 internal prompts patched** (16 operators + 9 personas + 8 frameworks + 1 orchestrator) : v1.3.0 contract block replaced with v1.4.0 dual contract block (Anti-Fabrication + Product-Promotion).
+- **Operator-consultations P3.C** : new field `must_quote_from` (claim_ids of STRUCTURE/EXAMPLES the pillar must ground in). Mandatory non-empty for PRODUCT_PROMOTION pillars.
+- **Default `never-claims.txt.template` enriched** with v1.4.0 entries blocking chapter/module/case fabrication.
+
+#### 10.B — Single-Run Production (delete content-batcher)
+
+- **DELETE** `skills/promote-content-batcher/` entirely.
+- **Strategist P4 patched** : produces the full configured window (default 90 days, configurable `--days N` flag) in ONE RUN. NO MORE `status='outline'` at delivery — every slot ends as `concrete` or `manual_review_needed`.
+- **Atomization variants library extended** from 10 to 15 variants (`references/content-production.md`) with rotation state in `STATE.yaml.atomization_history` to support 30+ atoms per pillar over 90 days.
+- **Calendar template renamed** : `11-content-calendar-14d-then-outline.csv` → `11-content-calendar-Nd-full.csv`. New columns: + `category` (PRODUCT_PROMOTION | INDUSTRY_PERSPECTIVE).
+- **`install.sh`** : 1 symlink (`promote-strategist` only). Was 2 in v1.3.0.
+- **Manifests v1.4.0** : 1 skill exposed.
+- **`STATE.yaml.template` enriched** with `product_type`, `product_content_path`, `product_content_completeness`, `atomization_history`, `window_days`.
+- **`handoff-to-executor.yaml.template` enriched** with `product_content_path`, `product_content_completeness`, `full_window_concrete_count`, `manual_review_needed_count`, `grounding_check_pass_rate`, `schema_version: v1.4.0-full-window`.
+- **30-point completeness checklist** (was 28 v1.3.0) : NEW Section M (source-truth grounding, 2 points).
+
+### BREAKING migration impact
+
+If you had v1.3.0 campaigns running, you will need to :
+
+1. Re-run P0.5 manually : invoke the product-content-ingester subagent on existing campaigns to generate `intake/product-content.md`.
+2. Re-run P1.5 to extract STRUCTURE+EXAMPLES claims from product-content.md.
+3. The content-batcher skill is GONE. If you were invoking `/promote:promote-content-batcher`, that no longer works. Use `/promote:promote-strategist <url>` (or `--resume` mode) which now produces the full window.
+4. Calendar schema changed (`14d-then-outline` → `Nd-full`, new `category` column, no more outline status).
+
+### Token budget v1.4.0 vs v1.3.0
+
+- v1.3.0 single-run (14d) + 5 batchers : ~2.5M tokens cumulés sur 90j.
+- v1.4.0 single-run 90d : ~1.6-2.0M tokens.
+- Net : économies modestes sur full window (~20-30%), simplicité majeure (1 entry point, 1 invocation, no manual batcher re-runs).
+
+User accepted token cost : *"il n'y a pas besoin d'économiser, je veux que strategist produise les post de la plage de temps prévue."*
+
+### Files added
+
+- `prompts/utility/product-content-ingester/prompt.md` (NEW subagent)
+- `skills/promote-strategist/templates/product-content.md.template`
+
+### Files removed
+
+- `skills/promote-content-batcher/` (entire directory : SKILL.md + references/)
+- `skills/promote-strategist/templates/11-content-calendar-14d-then-outline.csv.template` (renamed)
+
+### Files renamed
+
+- `skills/promote-strategist/templates/11-content-calendar-14d-then-outline.csv.template` → `11-content-calendar-Nd-full.csv.template`
+
+### Files modified (substantial)
+
+- `references/anti-fabrication-contract.md` (Product-Promotion Constraint section + Règles 5-6-7)
+- `references/content-production.md` (3 NEW Quality Gate #7 sub-checks + atomization 15 variants + post category PRODUCT_PROMOTION/INDUSTRY_PERSPECTIVE)
+- `prompts/utility/claims-extractor/prompt.md` (STRUCTURE/EXAMPLES categories + read product-content.md)
+- `prompts/utility/fact-checker/prompt.md` (3 NEW sub-checks #7.1/#7.2/#7.3 + 7 moves vs 4)
+- `skills/promote-strategist/SKILL.md` (P0.5 added, P4 single-run, drops outline status)
+- `skills/promote-strategist/references/{pipeline-phases,delegation-matrix,intake-questions,completeness-checklist}.md`
+- `skills/promote-strategist/templates/{STATE.yaml,handoff-to-executor.yaml,never-claims.txt}.template`
+- All 34 internal prompts under `prompts/` (v1.3.0 contract → v1.4.0 dual contract)
+- `install.sh` (1 symlink)
+- `.claude-plugin/{plugin,marketplace}.json` (1.4.0)
+- `README.md` (v1.4.0 workflow + P0.5 + single-run mention)
+
+---
+
 ## [1.3.0] — 2026-05-01 — **BREAKING — Quality + Verification + Lean**
 
 ### Why this release

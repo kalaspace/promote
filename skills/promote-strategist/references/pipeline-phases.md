@@ -1,13 +1,15 @@
-# Pipeline Phases — `promote-strategist` (v1.3.0)
+# Pipeline Phases — `promote-strategist` (v1.4.0)
 
 Detailed specification of each phase. Companion to the main SKILL.md.
 
-**v1.3.0 changes vs v1.2.0**:
-- New phase **P1.5 — Claims Extraction & Validation** between P1 and P2.
-- P3 trimmed from 7 to 5 sub-phases (A-E ; ex-F GEO-Plan CUT, ex-G Rumelt-Aval opt-in via `--rumelt-aval` flag, renamed P3.F).
-- P3.E adds Schwartz awareness routing in calendar + top-3-tripwires consolidation (replaces full 8-tripwire instrumentation).
-- P4 adds 2 Quality Gates (#7 factual claims check + #8 reader-honesty) and produces output as 2-file split (`.md` pure content + `.meta.yaml`).
-- P5 produces 11 strategy files (vs 14) — 09-geo-plan + p3g-rumelt + 10-instrumentation full removed/replaced ; calendar trimmed.
+**v1.4.0 changes vs v1.3.0**:
+- New phase **P0.5 — Product Content Ingestion** between P0 and P1 (subagent product-content-ingester ingests product itself as source-of-truth for STRUCTURE+EXAMPLES claims).
+- P1.5 enriched : claims-extractor reads `intake/product-content.md` for STRUCTURE+EXAMPLES categories.
+- P3.C operator-consultations have new `must_quote_from` field (claim_ids of STRUCTURE/EXAMPLES the pillar must ground in).
+- P4 SINGLE-RUN produces full configured window (default 90 days, `--days N` flag). NO MORE `outline` status. content-batcher skill DELETED.
+- P4 Quality Gate #7 enriched with 3 NEW sub-checks (#7.1 product grounding, #7.2 structural reference match, #7.3 anecdote source).
+- Atomization variants library extended to 15 (was 10) for single-run on 90 days.
+- P5 produces calendar `11-content-calendar-Nd-full.csv` (renamed from 14d-then-outline). 30-point completeness checklist (was 28).
 
 ## P0 — INTAKE
 
@@ -32,7 +34,63 @@ Detailed specification of each phase. Companion to the main SKILL.md.
 7. Initialize `STATE.yaml` (see `state-schema.md` reference).
 8. Set `STATE.phase = P1` (or skip to P3 if autopilot mode).
 
-**Output gate**: STATE.yaml exists, url-crawl.md exists. If WebFetch fails, retry once. If still fails, mark `STATE.crawl_failed = true` and ask the user for a manual product brief paragraph.
+**Output gate**: STATE.yaml exists, url-crawl.md exists, **`STATE.product_type` set**. If WebFetch fails, retry once. If still fails, mark `STATE.crawl_failed = true` and ask the user for a manual product brief paragraph.
+
+## P0.5 — PRODUCT CONTENT INGESTION (NEW v1.4.0)
+
+**Mandatory read**: `../../../references/anti-fabrication-contract.md` Product-Promotion Constraint section.
+
+**Inputs**: `STATE.product_type`, `intake/url-crawl.md`, URL.
+
+**Steps**:
+
+1. **Read+Task** the product-content-ingester subagent (`prompts/utility/product-content-ingester/prompt.md`):
+   ```
+   ingester_path = "prompts/utility/product-content-ingester/prompt.md"
+   ingester_content = Read(ingester_path)
+   url_crawl = Read("intake/url-crawl.md")
+   Task(
+     subagent_type="general-purpose",
+     description="Product content ingestion",
+     prompt=f"""You are the product-content-ingester. Use this prompt:
+
+   {ingester_content}
+
+   Context :
+   - product_type: {STATE.product_type}
+   - URL crawled: {STATE.url}
+   - intake/url-crawl.md content:
+
+   {url_crawl}
+
+   Output the structured `intake/product-content.md` based on type-specific ingestion strategy. Return YAML report.
+   """
+   )
+   ```
+2. The subagent dispatches based on product_type :
+   - `book` → Amazon Look Inside / publisher page / ASK USER for TOC + summaries
+   - `saas` → multi-WebFetch on docs/features/pricing/changelog
+   - `course` → course landing crawl / ASK USER for syllabus
+   - `service` → ASK USER directly
+   - `hybrid` → ASK USER for product structure
+3. **Save** subagent's structured markdown to `<runtime_root>/{slug}/intake/product-content.md`.
+4. **Mode guided** : if subagent's autopilot crawl is incomplete, the strategist relays the user-prompt the subagent constructs and waits for paste.
+5. **Mode autopilot** : if crawl insufficient and no user available, save partial content + flag `STATE.product_content_completeness = "PARTIAL"` (or `MISSING` if user refused).
+6. Update `STATE.yaml`:
+   ```yaml
+   product_content_path: intake/product-content.md
+   product_content_completeness: COMPLETE | PARTIAL | MISSING
+   product_content_ingested_at: <ISO date>
+   phase: P0.5-completed → P1
+   ```
+
+**Output gate** : `intake/product-content.md` exists. If `MISSING`, warn user that ~70% of posts will need manual review (Quality Gate #7.1 will fail without STRUCTURE/EXAMPLES claims).
+
+**Failure modes** :
+- All crawl attempts fail + user refuses to paste → degraded mode `MISSING`.
+- Subagent extracts but content is sparse (< 5 STRUCTURE entries) → flag `PARTIAL`.
+
+**Cost** : ~10-30K tokens (subagent + multi-fetch for SaaS) + 5-15 min user time if paste needed.
 
 ## P1 — PRODUCT DEEP DIVE
 
@@ -56,11 +114,11 @@ For each batch B1...B5:
 
 **Loop control**: if user gives meta-questions ("why are you asking?"), answer briefly using the rationale from `intake-questions.md` for that question, then re-pose. Do not abandon a batch.
 
-## P1.5 — CLAIMS EXTRACTION & VALIDATION (NEW v1.3.0)
+## P1.5 — CLAIMS EXTRACTION & VALIDATION (v1.4.0 with STRUCTURE+EXAMPLES)
 
-**Mandatory read**: `../../../references/claims-ledger-spec.md` (CSV format + lifecycle).
+**Mandatory read**: `../../../references/claims-ledger-spec.md` (CSV format + lifecycle, v1.4.0 schema with STRUCTURE+EXAMPLES categories + `source` column).
 
-**Inputs**: all `intake/batch-*.md` from P1 + `intake/url-crawl.md` from P0.
+**Inputs**: `intake/batch-*.md` from P1 + `intake/url-crawl.md` from P0 + **`intake/product-content.md` from P0.5** (NEW v1.4.0).
 
 **Steps**:
 
@@ -68,39 +126,38 @@ For each batch B1...B5:
    ```
    extractor_path = "prompts/utility/claims-extractor/prompt.md"
    extractor_content = Read(extractor_path)
-   intake_files_content = concat(Read all intake/batch-*.md + url-crawl.md)
-   Task(
-     subagent_type="general-purpose",
-     description="Claims extraction from intake",
-     prompt=f"""You are the claims-extractor. Use this prompt:
-
-   {extractor_content}
-
-   Intake content to process:
-   {intake_files_content}
-
-   Output a CSV (verified-claims.csv format per references/claims-ledger-spec.md).
-   """
+   intake_files_content = concat(
+     Read all intake/batch-*.md +
+     Read intake/url-crawl.md +
+     Read intake/product-content.md  # NEW v1.4.0
    )
+   Task(...)
    ```
-2. **Save the extracted CSV** to `<runtime_root>/{slug}/intake/verified-claims.csv`.
-3. **Initialize never-claims.txt** with header (no body — user fills manually).
+2. **Save** the extracted CSV to `<runtime_root>/{slug}/intake/verified-claims.csv`. v1.4.0 schema : column `source` (renamed from `source_batch`) accepts `product-content` value. Categories include STRUCTURE+EXAMPLES (sourced EXCLUSIVELY from product-content.md).
+3. **Initialize never-claims.txt** with v1.4.0 default entries (any chapter title not in product-content.md, etc.).
 4. **Mode guided gate humain** (default):
-   - Print to user: *"Voici les {N} claims extraites de ton intake. Review en 15 min : valide/rejette/édit. Liste en `never-claims.txt` les phrases que tu refuses qu'on dise sur ton produit."*
-   - Wait for user response (user edits CSV directly, then says "done").
+   - Print to user: *"Voici les {N} claims extraites (v1.4.0 typiquement 40-80, vs 20-50 v1.3.0 — augmenté par STRUCTURE+EXAMPLES from product-content.md). Review en ~20 min : valide/rejette/édite. Vérifie particulièrement les claims STRUCTURE/EXAMPLES qui sourcent les references chapter/module dans tes posts."*
+   - Wait for user response.
 5. **Mode autopilot**:
-   - Auto-validate `verified_by_user=TRUE` for all `confidence=HIGH`.
-   - Mark all `MEDIUM`/`LOW` as `verified_by_user=FALSE`.
-   - Leave `never-claims.txt` empty.
-6. Update `STATE.claims_ledger_validated_at = <ISO>` and `STATE.phase = P2`.
+   - Auto-validate `verified_by_user=TRUE` for `confidence=HIGH` (incl. STRUCTURE/EXAMPLES from product-content.md if COMPLETE).
+   - Mark MEDIUM/LOW as FALSE.
+   - Default never-claims.txt entries left in place.
+6. Update `STATE.yaml`:
+   ```yaml
+   claims_ledger_validated_at: <ISO>
+   ledger_total_claims: N
+   ledger_structure_examples_count: K  # NEW v1.4.0
+   phase: P1.5-completed → P2
+   ```
 
-**Output gate**: `verified-claims.csv` exists with ≥10 rows (a typical product yields 20-50 claims). `never-claims.txt` exists (may be empty).
+**Output gate**: `verified-claims.csv` exists with ≥30 rows for a product with COMPLETE product-content.md (else flag intake quality issue). If product-content.md was MISSING, ledger may have ≥10 rows but K=0 → downstream Quality Gate #7.1 will fail most PRODUCT_PROMOTION posts.
 
 **Failure modes**:
-- Extractor fails (timeout, malformed CSV) → retry once. If fails again, use mode "autopilot" with user-confirmed warning.
-- User refuses ledger validation in guided mode → fall back to autopilot semantics for this campaign + log warning in STATE.
+- Extractor fails → retry once.
+- product-content.md MISSING → claims-extractor produces ledger without STRUCTURE/EXAMPLES + warning notes column.
+- User refuses ledger validation in guided mode → fall back to autopilot semantics + log warning.
 
-**Cost**: ~5-10K tokens (1 subagent call). User time: ~15 min in guided mode.
+**Cost**: ~8-15K tokens v1.4.0 (vs 5-10K v1.3.0 — increased by product-content.md ingestion). User time: ~20 min in guided mode.
 
 ## P2 — MARKET RESEARCH
 
@@ -133,7 +190,7 @@ For each batch B1...B5:
 
 **v1.3.0 trimming rationale**: post-mortem of v1.2.0 campaign (`amazon-fr-dp-b0gx2zpnyq`) showed `09-geo-plan.md` + full `10-instrumentation.md` + `p3g-rumelt-aval.md` had ~0% downstream impact on P4 content production. They are removed (Geo) or opt-in (Rumelt-Aval) or trimmed (instrumentation → top-3 tripwires).
 
-**MANDATORY for ALL P3 sub-phase invocations**: each subagent receives `intake/verified-claims.csv` + `intake/never-claims.txt` in its context. Subagents in CONSULTATION mode produce 8 fields (the 7 v1.2.0 fields + new `narrative_hypotheses`). See `delegation-matrix.md` for the schema.
+**MANDATORY for ALL P3 sub-phase invocations** (v1.4.0): each subagent receives `intake/verified-claims.csv` + `intake/never-claims.txt` + **`intake/product-content.md`** (NEW v1.4.0) in its context. Subagents in CONSULTATION mode produce 9 fields (the 8 v1.3.0 + new **`must_quote_from`** v1.4.0 listing claim_ids of category STRUCTURE/EXAMPLES the pillar must be grounded in). For PRODUCT_PROMOTION pillars, `must_quote_from` MUST be non-empty — sinon le pillar est REJETÉ. Voir `delegation-matrix.md` pour le schema complet.
 
 ### P3.A — Foundations (no channel-specific operators)
 
@@ -210,61 +267,70 @@ If gate fails, retry the delegation ONCE with refined input. If second retry fai
 
 **Time budget v1.3.0**: ~280K tokens for P3 (vs ~348K v1.2.0, -20% via trimming).
 
-## P4 — CONTENT PRODUCTION 14-DAY (v1.3.0 with ledger + 8 quality gates + schema split)
 
-For the **first 14 days** of the calendar (J0-J13), produce concrete posts using operator subagents in PRODUCTION mode.
+## P4 — CONTENT PRODUCTION FULL-WINDOW (v1.4.0 single-run, replaces 14-day v1.3.0)
+
+v1.4.0 BREAKING : produces the **full configured window** (default 90 days, configurable via `--days N` flag) in ONE RUN. NO MORE `status='outline'`. content-batcher SKILL DELETED.
 
 **Steps**:
 
-1. **Build calendar skeleton** : 90 days × cadence per channel. For J14-J89, status='outline' with minimal fields (`date,channel,pillar,format,awareness_stage,hypothesis,status='outline'`). For J0-J13, prepare for production.
-2. **For each J0-J13 slot** (~14-42 slots depending on cadence) :
-   - Read slot row (date, channel, pillar, format, **awareness_stage**, hypothesis).
-   - Read `strategy/operator-consultations/{operator-name}.md` (must include `narrative_hypotheses` v1.3.0). **CRITICAL** : abort if missing.
-   - Read `intake/verified-claims.csv` + `intake/never-claims.txt` (NEW v1.3.0 mandatory).
+1. **Build calendar skeleton** : N days (default 90) × cadence per channel = ~90-270 slots. ALL slots prepared for production. Initialize `STATE.yaml.atomization_history = {pillar_id: [] for each pillar}`.
+2. **For each slot, sequentially** :
+   - Read slot row (date, channel, pillar, format, **awareness_stage**, **category** (PRODUCT_PROMOTION | INDUSTRY_PERSPECTIVE) v1.4.0, hypothesis).
+   - Read `strategy/operator-consultations/{operator-name}.md` (must include `must_quote_from` v1.4.0 + `narrative_hypotheses` + `anti_patterns`). **CRITICAL** : abort if missing.
+   - Read inputs : `intake/verified-claims.csv` + `intake/never-claims.txt` + **`intake/product-content.md`** (NEW v1.4.0) + `STATE.yaml.atomization_history[pillar_id]`.
    - Identify operator/framework via routing table in `../../../references/content-production.md`.
-   - If operator/persona prompt: Read+Task in PRODUCTION mode with **10 inputs** (positioning + pillar + cadence + voice + slot.hypothesis + strategic_recommendations + anti_patterns + narrative_hypotheses + verified_claims_csv + never_claims_txt). Subagent operates under `../../../references/anti-fabrication-contract.md`.
-   - If framework: read framework + apply tactiques inline. Strategist STILL applies anti-fabrication contract.
-   - Subagent returns: title + body + `factual_claims_used` + `narrative_gaps_to_fill` + assets_specs + posting_metadata + `atomization_variant_used`.
+   - If operator/persona prompt: Read+Task in PRODUCTION mode with **12 inputs** (10 v1.3.0 + product-content + must_quote_from + atomization_history). Subagent operates under `../../../references/anti-fabrication-contract.md` Anti-Fabrication + Product-Promotion Constraint.
+   - Subagent returns: title + body + `factual_claims_used` (with category) + `narrative_gaps_to_fill` + assets_specs + posting_metadata + `atomization_variant_used`.
 3. **Run 8 Quality Gates** per `../../../references/content-production.md`:
-   - #1 Form (length + reject-on-placeholder hard FAIL if `{...}` in body)
+   - #1 Form (length + reject-on-placeholder hard FAIL)
    - #2 Word count
    - #3 Voice match
-   - #4 Anti-patterns transverses (Pattern #11, atomization-mechanical-repeat, etc.)
+   - #4 Anti-patterns transverses (incl. atomization-mechanical-repeat with rotation rule v1.4.0 — 15 variants)
    - #5 Single CTA
    - #6 Asset specs
-   - **#7 Factual Claims Check (NEW)** — Read+Task `prompts/utility/fact-checker/prompt.md` ; reject_immediate if never-claim match
-   - **#8 Reader-Honesty (NEW)** — Read+Task `prompts/utility/reader-honesty-judge/prompt.md` ; ratio reader-first ≥ 70%
-4. **If pass**: split output into 2 files (NEW v1.3.0 schema):
-   - `campaigns/{slug}/content/posts/{YYYY-MM-DD}-{channel}-{pillar-short}.md` (PURE CONTENT, copy-paste ready, no metadata, NO `{...}` placeholders)
-   - `campaigns/{slug}/content/posts/.meta/{YYYY-MM-DD}-{channel}-{pillar-short}.yaml` (METADATA: gates audit, asset specs, posting metadata, voice notes, factual_claims_used, narrative_gaps_to_fill, atomization_variant_used)
-5. **If gate fails**: retry once with refined input (e.g., constrain factual_claims_used to ledger). If fails again: mark `manual_review_needed` for that slot, continue.
-6. **If Gate #7 reject_immediate (never-claim match)**: jeter le draft, slot reste en `outline`, log `manual_review_needed: matched never-claim "{X}"`. Pas de retry.
-7. **Output**: 14-42 concrete posts (2 files each) in `campaigns/{slug}/content/posts/` + `.meta/` subdir + calendar updates with `body_path` + `meta_path`.
+   - **#7 Factual Claims Check** (v1.4.0 enriched with 3 NEW sub-checks)
+     - #7.0 base : never-claim match → reject_immediate
+     - **#7.1 product grounding (NEW v1.4.0)** : if `category=PRODUCT_PROMOTION`, ≥1 STRUCTURE/EXAMPLES claim required → soft-fail if not
+     - **#7.2 structural reference match (NEW v1.4.0)** : chapter/module/feature names hard-fail without STRUCTURE claim → reject_immediate
+     - **#7.3 anecdote source (NEW v1.4.0)** : specific persons/cases need EXAMPLES claim or attribution → soft-fail if not
+   - **#8 Reader-Honesty** ratio reader-first ≥ 70% (threshold by awareness_stage)
+4. **If pass**: split output into 2 files (v1.3.0 schema, unchanged):
+   - `content/posts/{YYYY-MM-DD}-{channel}-{pillar-short}.md` (PURE CONTENT, copy-paste ready, NO `{...}` placeholders)
+   - `content/posts/.meta/{YYYY-MM-DD}-{channel}-{pillar-short}.yaml` (METADATA full audit trail)
+5. **Update STATE** : append `atomization_variant_used` to `STATE.yaml.atomization_history[pillar_id]`.
+6. **If reject_immediate** (Gate #7.0 OR Gate #7.2): jeter le draft, slot stays `manual_review_needed`. NO RETRY.
+7. **If soft-fail** (#7.1 grounding OR #7.3 anecdote OR generic unverified ≤2): retry once with refined constraint. If fails again: `manual_review_needed`, continue.
+8. **Output**: ~90-270 concrete posts (2 files each) in `content/posts/` + `.meta/` + calendar updates.
 
-**Time budget v1.3.0**: ~500K tokens for content production 14d (vs ~340K v1.1.0 — augmentation due aux gates #7+#8 mais compensée par les économies Phase 9.E).
+**Resume mode** : if crash mid-P4, scan calendar for slots with `status='concrete'`, resume from first non-concrete.
 
-**For J14-J89 (76 days remaining)**: NOT produced in P4. They are converted on demand by `promote-content-batcher` at user invocation (J+14, J+28, J+42, etc.). Same v1.3.0 schema split applies.
+**Time budget v1.4.0**: ~1.5-2M tokens for 90-day full-window. User accepts.
 
-## P5 — PACKAGING (v1.3.0)
+**Wall-clock estimate**: ~10-30 min for ~90-270 sequential Task calls.
+
+## P5 — PACKAGING (v1.4.0)
 
 **Steps**:
 
-1. Generate `strategy/00-product-brief.md` from intake/* artifacts (template). Highlight P1.5 ledger key claims.
+1. Generate `strategy/00-product-brief.md` from intake/* artifacts. Highlight P0.5 product structure + P1.5 ledger key claims.
 2. Generate `strategy/01-market-research.md` from research/* artifacts.
-3. P3 artifacts already in place (P3.A-E + optional P3.F Rumelt). Note: NO `09-geo-plan.md` in v1.3.0 default.
-4. Calendar `strategy/11-content-calendar-14d-then-outline.csv` (RENAMED from 90d.csv). Columns: `date, channel, pillar, format, awareness_stage, body_path, meta_path, hypothesis, status`. J0-J13 concrete with paths filled. J14-J89 outline with minimal fields.
-5. Generate `strategy/strategy-summary.md` (2-page exec summary). Must contain Rumelt's 3 elements + tradeoffs résolus from P3.D + narrative-hypotheses-requiring-confirmation.
+3. P3 artifacts already in place (P3.A-E + optional P3.F Rumelt). Note: NO `09-geo-plan.md` in v1.4.0.
+4. Calendar `strategy/11-content-calendar-Nd-full.csv` (RENAMED v1.4.0 from 14d-then-outline). Columns: `date, channel, pillar, format, awareness_stage, category, body_path, meta_path, hypothesis, status, generated_at`. ALL slots `status='concrete'` or `status='manual_review_needed'`. NO outline.
+5. Generate `strategy/strategy-summary.md` (2-page exec summary). Must contain Rumelt's 3 elements + tradeoffs résolus + narrative-hypotheses-requiring-confirmation + manual_review_needed_count summary.
 6. Generate `strategy/handoff-to-executor.yaml` with sections including:
-   - `content` (concrete_posts_count, outlines_count, posts_directory, **meta_directory**, channel_distribution)
-   - `tripwires_top3` (NEW v1.3.0, from `10-tripwires-top3.md`)
+   - `content` (full_window_concrete_count, manual_review_needed_count, posts_directory, meta_directory, channel_distribution, schema_version: v1.4.0-full-window)
+   - `tripwires_top3` (from `10-tripwires-top3.md`)
    - `ledger_path: campaigns/{slug}/intake/verified-claims.csv`
    - `never_claims_path: campaigns/{slug}/intake/never-claims.txt`
-7. Run `completeness-checklist.md` (28 points v1.3.0, trimmed from 40).
+   - **`product_content_path: campaigns/{slug}/intake/product-content.md`** (NEW v1.4.0)
+   - **`product_content_completeness: COMPLETE | PARTIAL | MISSING`** (NEW v1.4.0)
+7. Run `completeness-checklist.md` (30 points v1.4.0, +2 vs 28 v1.3.0 — Section M product-content + grounding).
 8. **Decision**:
    - `pass% >= 90%` → `STATE.status = ready-for-executor`.
    - `90% > pass% >= 70%` → loop back to weakest phase, retry once.
    - `pass% < 70%` → escalate.
-9. Output completion summary to user with paths to `strategy-summary.md` + `content/posts/` directory + `intake/verified-claims.csv`.
+9. Output completion summary to user with paths to `strategy-summary.md` + `content/posts/` directory + `intake/verified-claims.csv` + `intake/product-content.md`.
 
 ## Resume mode
 

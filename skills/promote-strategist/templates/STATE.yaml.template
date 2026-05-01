@@ -1,11 +1,26 @@
-# STATE.yaml — runtime state for campaign {campaign_id}
+# STATE.yaml — runtime state for campaign {campaign_id} (v1.4.0)
 campaign_id: "{campaign_id}"
 url: "{url}"
 runtime_root: "{absolute_path_resolved_in_P0_step_1}"  # $PROMOTE_HOME | <cwd>/campaigns | ${CLAUDE_PLUGIN_DATA}/campaigns
 mode: "guided"  # guided | autopilot | resume
-phase: "P0"     # P0 | P1 | P2 | P3.A | P3.B | P3.C | P3.D | P3.E | P3.F | P3.G | P4 | P5 | ready-for-executor | manual_review_needed
+phase: "P0"     # P0 | P0.5 | P1 | P1.5 | P2 | P3.A | P3.B | P3.C | P3.D | P3.E | P3.F | P4 | P5 | ready-for-executor | manual_review_needed
 created: "{ISO-date}"
 last_updated: "{ISO-date}"
+
+# Product type detection (NEW v1.4.0, set at P0)
+product_type: ""  # book | saas | course | service | hybrid
+
+# P0.5 Product Content Ingestion (NEW v1.4.0)
+product_content_path: "intake/product-content.md"
+product_content_completeness: ""  # COMPLETE | PARTIAL | MISSING
+product_content_ingested_at: ""
+
+# P1.5 Claims Ledger (v1.3.0 + v1.4.0 STRUCTURE/EXAMPLES)
+claims_ledger_path: "intake/verified-claims.csv"
+never_claims_path: "intake/never-claims.txt"
+claims_ledger_validated_at: ""
+ledger_total_claims: 0
+ledger_structure_examples_count: 0  # NEW v1.4.0 — count of STRUCTURE+EXAMPLES claims (sourced from product-content.md)
 
 known_facts:
   product_name: ""
@@ -40,22 +55,30 @@ unknowns: []          # list of fields user said "don't know"
 hypotheses_to_validate: []  # surface in strategy-summary
 
 batches_completed: []  # ["B1", "B2", ...]
-delegations_completed: []  # ["P3.A.jtbd", "P3.B.channel-strategist", "P3.C.welsh-linkedin", ...]
-operator_consultations_completed: []  # ["promote-welsh-linkedin", "promote-mcgarry-newsletter", ...]
-warnings: []           # ["no_clear_diagnosis_from_inputs", "competitor_research_thin", ...]
+delegations_completed: []  # ["P3.A.jtbd", "P3.B.channel-strategist", ...]
+operator_consultations_completed: []  # ["welsh-linkedin", "mcgarry-newsletter", ...]
+warnings: []           # ["product_content_missing", "no_clear_diagnosis_from_inputs", ...]
 
-# Content production tracking (v1.1.0)
-concrete_posts_count: 0   # filled in P4 (target: 14 days × cadence)
-outlines_count: 0         # filled in P5 (J14-J89)
+# P4 Content production tracking v1.4.0 (single-run, full window)
+window_days: 90  # configurable via --days N flag
+full_window_concrete_count: 0
+manual_review_needed_count: 0
 posts_directory: "content/posts/"
+meta_directory: "content/posts/.meta/"
+
+# Atomization rotation state (v1.4.0 single-run, mapping pillar_id → list of variants used)
+atomization_history: {}  # e.g., {"pillar-1-meta-ia-ecrit": ["failure-confession", "objection-killer"]}
 
 artifact_status:
-  intake/url-crawl.md: "pending"  # pending | done | failed
+  intake/url-crawl.md: "pending"
+  intake/product-content.md: "pending"  # NEW v1.4.0
   intake/batch-1-product.md: "pending"
   intake/batch-2-icp.md: "pending"
   intake/batch-3-pricing.md: "pending"
   intake/batch-4-proof.md: "pending"
   intake/batch-5-voice-goals.md: "pending"
+  intake/verified-claims.csv: "pending"
+  intake/never-claims.txt: "pending"
   research/competitors.md: "pending"
   research/market-context.md: "pending"
   research/icp-personas.md: "pending"
@@ -65,16 +88,18 @@ artifact_status:
   strategy/03-positioning.md: "pending"
   strategy/04-offer-audit.md: "pending"
   strategy/05-growth-fits.md: "pending"
+  strategy/06-distribution-philosophy.md: "pending"
   strategy/06-distribution-plan.md: "pending"
   strategy/07-content-pillars.md: "pending"
   strategy/08-channel-strategy.md: "pending"
-  strategy/09-geo-plan.md: "pending"
-  strategy/10-instrumentation.md: "pending"
-  strategy/11-content-calendar-90d.csv: "pending"
+  strategy/10-tripwires-top3.md: "pending"
+  strategy/11-content-calendar-Nd-full.csv: "pending"
   strategy/strategy-summary.md: "pending"
   strategy/handoff-to-executor.yaml: "pending"
-  strategy/operator-consultations/: "pending"  # folder, P3.C v1.1.0
-  content/posts/: "pending"  # folder, P4 v1.1.0
+  strategy/operator-consultations/: "pending"
+  content/posts/: "pending"
+  content/posts/.meta/: "pending"
 
-completeness_score: 0  # /40, set at P5
+completeness_score: 0  # /30 v1.4.0, set at P5
 status: "active"       # active | ready-for-executor | escalated
+rumelt_aval_run: false  # true only if --rumelt-aval flag was set

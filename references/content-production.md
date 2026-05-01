@@ -1,33 +1,37 @@
-# Content Production — factorisation logique multi-canal (v1.3.0)
+# Content Production — factorisation logique multi-canal (v1.4.0)
 
-> **Rôle dans le projet** : référence consultée par `promote-strategist` (P4 Content Production 14-day) ET par `promote-content-batcher` (conversion outlines → concrets après J+14). Garantit que les deux skills produisent du contenu de manière cohérente, en consommant les `strategic_recommendations` des operators établies en P3.C ET le `verified-claims.csv` validé en P1.5.
+> **Rôle dans le projet** : référence consultée par `promote-strategist` (P4 Content Production single-run) qui produit la plage de calendar complète (default 90 jours) en un run. v1.4.0 SUPPRIME `promote-content-batcher` — strategist gère tout.
 
-## v1.3.0 — Changements vs v1.2.0
+## v1.4.0 — Changements vs v1.3.0
 
-- **Output schema split** : chaque post produit = 2 fichiers. `.md` = pur contenu prêt à copier-coller. `.meta.yaml` (sous `content/posts/.meta/`) = metadata complète (asset specs, posting metadata, quality gate audits, voice notes, factual_claims_used, narrative_gaps_to_fill).
-- **Quality Gate #7 — Factual Claims Check** : nouveau gate cross-checke chaque claim du post contre `intake/verified-claims.csv` + `intake/never-claims.txt`. Reject si fabrication détectée.
-- **Quality Gate #8 — Reader-Honesty** : nouveau gate vérifie ratio lecteur-first vs auteur-first (cible 70/30).
-- **Quality Gate #1 (form) durci** : reject hard si le `.md` body contient encore un `{...}` placeholder.
-- **Atomization variants** : la grille pillar n'est plus reproduite à l'identique. 5 variants imposés par rotation.
+- **Single-run P4** : strategist produit la plage de calendar complète (default 90 jours, configurable `--days N`). Plus d'`status='outline'` à la livraison — soit `concrete`, soit `manual_review_needed`.
+- **Source-truth Ledger** : `intake/product-content.md` (NEW P0.5) est la source EXCLUSIVE des claims STRUCTURE+EXAMPLES dans `verified-claims.csv`. Plus d'inférence depuis batches.
+- **Post category** : chaque slot du calendar a maintenant une category `PRODUCT_PROMOTION` ou `INDUSTRY_PERSPECTIVE`. Determine les checks aval Gate #7.
+- **Quality Gate #7 enrichi avec 3 NEW checks** : #7.1 product grounding (PRODUCT_PROMOTION must trace ≥1 STRUCTURE/EXAMPLES claim), #7.2 structural reference match (chapter/module names hard-fail without STRUCTURE claim), #7.3 anecdote source.
+- **must_quote_from en consultation P3.C** : chaque pillar promotionnel doit lister les claim_ids STRUCTURE/EXAMPLES sur lesquels il s'ancre.
+- **content-batcher SKILL deleted** : la logique reste factorisée ici, consommée par strategist seul.
+- (Inchangé v1.3.0) : Output schema split (.md pure + .meta.yaml), Quality Gates #1-#8, atomization variants library, Reject-on-placeholder rule.
 
 ## Pourquoi ce framework existe
 
 Sans factorisation, P4 du strategist et content-batcher dupliqueraient leur logique de production. Cette référence centralise **comment produire un post concret** pour chaque canal, en consommant les artefacts strategist (pillars + cadence + voice + operator consultations + verified-claims).
 
-## Inputs requis pour produire un post
+## Inputs requis pour produire un post (v1.4.0)
 
 Pour CHAQUE slot du calendar à concrétiser, les inputs nécessaires :
 
-1. **STATE.yaml** de la campagne (campaign_id, runtime_root, mode).
-2. **strategy/00-product-brief.md** (one-liner, JTBD, voice).
-3. **strategy/03-positioning.md** (Dunford one-sentence + contrarian angle Ammar).
-4. **strategy/04-offer-audit.md** (awareness stage Schwartz, mass desire, leviers Cialdini).
-5. **strategy/07-content-pillars.md** (pillar du slot + framework copy + audience awareness target).
-6. **strategy/08-channel-strategy.md** (cadence + voice + format pour le canal).
-7. **strategy/operator-consultations/{operator-name}.md** (les `strategic_recommendations` + `narrative_hypotheses` + `anti_patterns` de l'operator pour ce produit). **CRITIQUE**.
-8. **intake/verified-claims.csv** (le ledger des claims factuels validés par le user). **CRITIQUE v1.3.0** — sans lui, le subagent invente.
-9. **intake/never-claims.txt** (les zones interdites définies par le user).
-10. Slot row du calendar : date, channel, pillar, format, awareness_stage, hypothesis (titre court d'orientation).
+1. **STATE.yaml** de la campagne (campaign_id, runtime_root, mode, atomization_history).
+2. **intake/product-content.md** (NEW v1.4.0 — source-of-truth pour STRUCTURE+EXAMPLES). **CRITIQUE** — sans lui, posts PRODUCT_PROMOTION échouent Gate #7.1.
+3. **strategy/00-product-brief.md** (one-liner, JTBD, voice).
+4. **strategy/03-positioning.md** (Dunford one-sentence + contrarian angle Ammar).
+5. **strategy/04-offer-audit.md** (awareness stage Schwartz, mass desire, leviers Cialdini).
+6. **strategy/07-content-pillars.md** (pillar du slot + framework copy + audience awareness target).
+7. **strategy/08-channel-strategy.md** (cadence + voice + format pour le canal).
+8. **strategy/operator-consultations/{operator-name}.md** (les `strategic_recommendations` + `must_quote_from` v1.4.0 + `narrative_hypotheses` + `anti_patterns` de l'operator). **CRITIQUE**.
+9. **intake/verified-claims.csv** (le ledger des claims factuels validés par le user, incl. STRUCTURE/EXAMPLES sourced from product-content.md). **CRITIQUE**.
+10. **intake/never-claims.txt** (les zones interdites définies par le user).
+11. Slot row du calendar : date, channel, pillar, format, awareness_stage, **category** (PRODUCT_PROMOTION | INDUSTRY_PERSPECTIVE), hypothesis (titre court d'orientation).
+12. Pillar's `must_quote_from` (claim_ids of STRUCTURE/EXAMPLES that this pillar must be grounded in — passed from operator-consultation).
 
 ## Logique de production par slot (v1.3.0)
 
@@ -334,29 +338,32 @@ Pour chaque post produit, exécuter dans cet ordre. Si un gate fail, retry une f
 
 - Briefés (pas générés), avec assez de détail qu'un designer puisse exécuter.
 
-### Gate #7 — Factual Claims Check (NEW v1.3.0)
+### Gate #7 — Factual Claims Check (v1.4.0 enrichi avec 3 NEW checks)
 
 Subagent `prompts/utility/fact-checker/prompt.md` :
 
 ```
-INPUT: post draft (title + body) + verified-claims.csv + never-claims.txt + url-crawl.md
-PROCESSING:
-1. Extract every factual claim from post (statement on product/author/process/numbers).
-2. For each claim:
-   a. Match never-claims (semantic) → reject_immediate if match
-   b. Match verified-claims (claim_id + variations) → OK, log claim_id
-   c. Match Public Verifiable (cite-able dated/numeric facts) → OK, log "public_fact"
-   d. Match Attributed (markers "FN raconte que...", "selon l'auteur...") → OK, log "attributed"
-   e. Else → UNVERIFIED, log claim_text + location
-3. If reject_immediate OR unverified_count > 2 → fail.
-   If 1 ≤ unverified_count ≤ 2 → soft-fail (retry once with explicit ledger constraints).
-   If unverified_count == 0 AND no reject_immediate → pass.
+INPUT: post draft (title + body) + post category (PRODUCT_PROMOTION | INDUSTRY_PERSPECTIVE)
+       + verified-claims.csv (with STRUCTURE/EXAMPLES claims v1.4.0)
+       + never-claims.txt + url-crawl.md + product-content.md
+PROCESSING (7 moves v1.4.0) :
+1. Extract claims from post + classify claim_type (general_factual | structural_reference | anecdote)
+2. Match each claim → claim_id (with category) | public_fact | attributed | UNVERIFIED
+3. Match never-claims (semantic) → reject_immediate if match
+4. NEW #7.1 (only if category=PRODUCT_PROMOTION) : count STRUCTURE+EXAMPLES claims_traced.
+   If 0 → soft-fail "post not grounded in product content".
+5. NEW #7.2 : for each structural_reference claim_type, must match a STRUCTURE claim.
+   If no match → reject_immediate (hard fail, no retry).
+6. NEW #7.3 : for each anecdote claim_type, must match EXAMPLES claim OR attribution+PROCESS.
+   Else → soft-fail "anecdote may be fabricated".
+7. Compile verdict + recommendation.
 
 OUTPUT: yaml gate_7_factual_claims_check field for .meta.yaml + recommendation
-        (ship | retry_with_ledger_constraints | manual_review_needed).
+        (ship | retry_with_ledger_constraints | retry_with_grounding_constraint
+         | retry_with_anecdote_constraint | manual_review_needed).
 ```
 
-Coût : ~3-7K tokens par post. Net-positif vs économies trim P3.
+Coût v1.4.0 : ~3-9K tokens par post. Largement compensé par la suppression du content-batcher overhead.
 
 ### Gate #8 — Reader-Honesty (NEW v1.3.0)
 
@@ -377,11 +384,11 @@ OUTPUT: yaml gate_8_reader_honesty field + recommendation (ship | retry_more_rea
 
 Coût : ~2-4K tokens par post.
 
-## Atomization variants library (NEW v1.3.0)
+## Atomization variants library (v1.4.0 enrichi à 15 variants)
 
-Quand un pillar long-form a été posté, ses 3-4 atomizations qui suivent ne peuvent PAS reproduire la même structure. Chaque atom = 1 variant distinct, rotation forcée.
+Quand un pillar long-form a été posté, ses atomizations qui suivent ne peuvent PAS reproduire la même structure. Chaque atom = 1 variant distinct, rotation forcée. v1.4.0 étend la library de 10 à 15 variants pour supporter le single-run sur 90 jours (potentiellement 30+ atoms par pillar).
 
-### 10 variants disponibles
+### 15 variants disponibles
 
 1. **hook-shock** : *"X chiffre/stat. Y conséquence."* (specific number opening)
 2. **dimanche-doute** : moment de doute privé qui ouvre, résolu par le pillar
@@ -393,17 +400,22 @@ Quand un pillar long-form a été posté, ses 3-4 atomizations qui suivent ne pe
 8. **case-micro** : 1 cas client en 200 mots, structurellement pas un case-study (juste un fragment vivant)
 9. **contrarian-reverse** : *"Vous attendiez Z. Mais en réalité, le contraire."*
 10. **micro-anecdote-from-pillar** : extraction d'un détail ou anecdote du pillar long-form, raconté en standalone
+11. **NEW v1.4.0 — chapter-quote** : citation directe d'un chapitre/section du produit avec micro-commentary (cf. Règle 6 du contract).
+12. **NEW v1.4.0 — example-zoom** : zoom in sur 1 EXAMPLES claim (cas/persona du produit) en 150 mots avec ce qu'il enseigne.
+13. **NEW v1.4.0 — checklist-extract** : extraire 3-5 items d'une checklist/cadre du produit, format scannable.
+14. **NEW v1.4.0 — before-after-from-product** : framing avant/après d'une situation littéralement décrite dans le produit.
+15. **NEW v1.4.0 — quote-collection** : 3-5 quotes courtes du produit, sans commentaire (laisse parler le produit).
 
-### Règle de rotation
+### Règle de rotation v1.4.0 (single-run 90j)
 
-Pour le pillar P, si atom-1 a utilisé variant V1 :
-- atom-2 doit utiliser un variant V2 ≠ V1
-- atom-3 doit utiliser V3 ≠ V1, V2
-- atom-4 V4 ≠ V1, V2, V3
+Pour le pillar P, dans STATE.yaml.atomization_history[P] = [list of variants used so far]. Chaque slot Task reçoit cette liste et :
+- Si len(history) < 15 : choisit un variant non-utilisé.
+- Si len(history) ≥ 15 : recycle dans l'ordre avec offset (variant index 0 = position 16, etc.) AND adjusts wording pour différencier ; flag `variant_repeat: true` dans `.meta.yaml` pour audit user.
+- Si pillar a 30+ atoms : warning user "consider splitting pillar into 2 sub-pillars".
 
 L'operator (en mode production) reçoit dans son contexte slot l'historique des variants utilisés pour ce pillar. Il choisit explicitement et marque `atomization_variant_used` dans le `.meta.yaml`.
 
-Quality Gate #4 (anti-pattern) check ce champ : si même variant que les 3 atoms précédents → fail (atomization-mechanical-repeat).
+Quality Gate #4 (anti-pattern) check : si même variant que les 3 atoms précédents → fail (atomization-mechanical-repeat). Recyclage avec offset après position 15 = OK avec flag `variant_repeat: true`.
 
 ## Anti-patterns transverses (à éviter quel que soit le canal)
 
@@ -418,18 +430,23 @@ Quality Gate #4 (anti-pattern) check ce champ : si même variant que les 3 atoms
 - **Auto-promotion masquée** — > 50% body sert l'auteur. Voir Gate #8.
 - **Placeholder unfilled** — `{...}` dans le `.md`. Voir Gate #1 reject-on-placeholder.
 
-## Coût en tokens estimé par post (v1.3.0)
+## Coût en tokens estimé par post (v1.4.0)
 
-- Operator (avec 10 inputs incl. ledger) : 6-12K input + 2-3K output = 8-15K total.
-- Framework reference : 4-8K input + 1-2K output = 5-10K total.
-- Quality Gate #7 (fact-checker) : 3-7K total.
+- Operator (avec 12 inputs incl. ledger + product-content + must_quote_from) : 7-14K input + 2-3K output = 9-17K total.
+- Framework reference : 5-9K input + 1-2K output = 6-11K total.
+- Quality Gate #7 (fact-checker, 3 NEW checks) : 3-9K total (légèrement augmenté v1.4.0).
 - Quality Gate #8 (reader-honesty) : 2-4K total.
 
-Pour 14 jours × cadence ~3 posts/jour = ~42 posts × ~12K tokens en moyenne = ~500K tokens pour P4 production. Compensé par les économies Phase 9.E (cut Geo-Plan + Rumelt-Aval + trim Instrumentation/Calendar = -105K tokens en P3).
+Pour 90 jours × cadence ~3 posts/jour = ~270 posts × ~14K tokens en moyenne = ~3.7M tokens pour P4 single-run. **MAIS** :
+- Cadence réaliste = 1-3 posts/jour × 90 = 90-270 posts. Si cadence basse → ~1.3M tokens P4.
+- Strategist orchestre 90-270 Task calls — chacun avec context window indépendant, pas de dégradation cumulative.
 
-**Bilan v1.3.0** : tokens totaux campagne ~1.2-1.3M (vs 1.51M v1.2.0), soit 15-20% de réduction à qualité supérieure.
+**Bilan v1.4.0 vs v1.3.0** : pour la campagne livre (cadence ~1 post/jour LinkedIn + 1/sem Substack) sur 90 jours = ~120 posts × ~14K = ~1.7M tokens P4 + ~300K P0-P3 = ~2M tokens total. vs v1.3.0 (14j P4 + 5 batchers) = ~2.5M cumulés sur 90j. Net : économies modestes sur 90j, simplicité majeure.
+
+User accepte le coût : "il n'y a pas besoin d'économiser, je veux que strategist produise les post de la plage de temps prévue".
 
 ## Changelog
 
+- **0.3.0** (2026-05-01) — v1.4.0. Single-run P4 (delete content-batcher). Source-truth ledger via product-content.md (P0.5). Post category PRODUCT_PROMOTION/INDUSTRY_PERSPECTIVE. Quality Gate #7 enrichi avec 3 NEW checks (#7.1 product grounding, #7.2 structural reference match hard-fail, #7.3 anecdote source). Atomization variants library étendue à 15 variants. Inputs enrichis avec product-content.md + must_quote_from + post category.
 - **0.2.0** (2026-04-30) — v1.3.0. Output schema split (.md pure content + .meta/.yaml metadata). Quality Gate #7 (factual claims check) + #8 (reader-honesty). Atomization variants library (10 variants, rotation forcée). Reject-on-placeholder rule. Inputs enrichis (verified-claims.csv + never-claims.txt mandatory).
 - **0.1.0** (2026-04-29) — v1.1.0. Factorisation P4 strategist + content-batcher logic.

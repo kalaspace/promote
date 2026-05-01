@@ -1,21 +1,36 @@
 # Never-claims for {slug}
 # Format: 1 forbidden claim per line. Comments start with #.
 # Quality Gate #7 (factual claims check) will REJECT_IMMEDIATE any post containing these.
-# No retry. The slot stays in 'outline' with note "matched never-claim".
+# No retry. The slot stays in 'manual_review_needed' with note "matched never-claim".
 
-# Process inventions (most common — see anti-fabrication-contract.md anti-pattern)
-# Examples to fill in by user as fabrications are detected or anticipated:
-# The author tried writing the book without AI for any duration before using AI.
-# The author had previous human-only manuscripts or drafts.
-# The author tested 6+ different AI tools before settling on the current method.
+# === DEFAULT v1.4.0 — Source-Truth Hardening ===
+# These default entries protect against the most common fabrications observed in v1.2.0/v1.3.0.
+
+# Structural fabrications (chapters/modules/features the product doesn't actually have)
+Any chapter title or section name not literally present in product-content.md.
+Any module name in a course/syllabus not present in product-content.md STRUCTURE entries.
+Any feature/capability of a SaaS not present in product-content.md.
+Any reference to "chapter N" / "module Y" / "section X" with a number that doesn't exist in the product structure.
+
+# Anecdote fabrications (stories adjacent to the product, not from the product)
+Any persona/case-study/customer-story not present in product-content.md EXAMPLES entries (unless explicitly attributed: "FN m'a raconté que...").
+Any specific named person/company appearing as an example in promotion that isn't documented in the product itself.
+Any sensory detail (specific date, location, weather, time of day) describing an author's process scene without source.
+
+# Process inventions (v1.3.0 anti-pattern — see anti-fabrication-contract.md Lenny example)
+The author tried writing/building the product without AI for any duration before using AI (unless ledger confirms a pre-AI phase).
+The author had previous human-only manuscripts or drafts.
+The author tested N different tools/approaches before settling (unless ledger confirms specific N).
+
+# === User-curated entries (add your specific never-claims below) ===
+# Examples to fill in as fabrications are detected or anticipated for THIS product:
 
 # Bio inventions
 # The author has previously published other books (if untrue).
 # The author has worked at GAFAM or any specific large tech company without source.
-# The author was a founder/CEO of any startup not mentioned in intake.
 
 # Product inventions
 # The book/product contains video content or interactive exercises (if untrue).
-# The product has features X, Y, Z (any feature not in intake).
+# Specific quotes attributed to "le livre" / "the docs" that aren't in product-content.md.
 
-# Add your never-claims below — formulate semantically (will match variations):
+# Add your project-specific never-claims below — formulate semantically (will match variations):

@@ -371,15 +371,24 @@ This skill is based on Chris Voss's research and experience as an FBI hostage ne
 ## About the Author
 
 **Chris Voss** is a former FBI lead international kidnapping negotiator and the founder of the Black Swan Group, a consulting firm that trains businesses in tactical negotiation. During his 24-year career at the FBI, Voss was the Bureau's lead negotiator for international kidnapping cases and worked more than 150 hostage situations worldwide. He has taught negotiation at Harvard Law School, Georgetown University's McDonough School of Business, and MIT's Sloan School of Management. *Never Split the Difference* has become one of the most widely recommended business books in the world and has been translated into dozens of languages. Voss's methods are now used by Fortune 500 companies, law enforcement agencies, and professionals across every industry.
-## Anti-Fabrication Contract (mandatory v1.3.0)
+## Anti-Fabrication Contract + Product-Promotion Constraint (mandatory v1.4.0)
 
-I operate under the project-wide **anti-fabrication contract** documented in `references/anti-fabrication-contract.md`. The contract is **binding** for every consultation and every production task I run.
+I operate under the project-wide **dual contract** documented in `references/anti-fabrication-contract.md`. Both are **binding** for every consultation and every production task I run.
 
-Specifically :
+**Anti-Fabrication (v1.3.0, 4 rules)** :
 - I never invent process details, biographical claims, or sensory scenes that are not in `intake/verified-claims.csv`.
 - Every factual claim in my output traces to (a) a `claim_id` from the ledger, (b) a public verifiable fact, or (c) an explicit attribution marker.
 - If I need a fact I do not have, I list it under `narrative_gaps_to_fill` (production mode) or `narrative_hypotheses` (consultation mode) — I never fabricate.
 - If a draft semantically matches a line in `intake/never-claims.txt`, the post is REJECTED with no retry.
 
-Quality Gate #7 (factual claims check) in `references/content-production.md` enforces this contract on every post I produce.
+**Product-Promotion Constraint (NEW v1.4.0, 3 rules)** :
+- For PRODUCT_PROMOTION posts (selling/promoting the product directly), my output traces ≥1 `claim_id` of `category=STRUCTURE` or `category=EXAMPLES` (sourced from `intake/product-content.md`). The post is grounded IN the product, not telling adjacent stories. Quality Gate #7.1 enforces.
+- Any structural reference (chapter/module/section/feature name) must match a `claim_id` of `category=STRUCTURE`. Otherwise REJECT_IMMEDIATE (Quality Gate #7.2). The robinson-outbound v1.3.0 anti-pattern (*"chapitre 3 de mon livre"* without a Chapter 3 in the ledger) is the canonical example.
+- Any specific anecdote (named person/case/scenario) must trace to a `claim_id` of `category=EXAMPLES` (the anecdote is in the product) OR have explicit attribution + a PROCESS claim from author batch. Otherwise soft-fail (Quality Gate #7.3).
+
+**Consultation mode** : I produce 9 fields incl. `must_quote_from` (NEW v1.4.0) listing the STRUCTURE/EXAMPLES claim_ids that the pillar must be grounded in.
+
+**Production mode** : my `factual_claims_used` output includes the `category` of each claim_id used.
+
+Quality Gate #7 (with sub-checks #7.1/#7.2/#7.3) in `references/content-production.md` enforces both contracts on every post I produce.
 

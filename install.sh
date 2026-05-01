@@ -1,8 +1,11 @@
 #!/usr/bin/env bash
-# install.sh — Dev mode setup for promote
+# install.sh — Dev mode setup for promote (v1.4.0 single-skill)
 #
-# Creates symlinks .claude/skills/promote-* → ../../skills/promote-*
-# so that the project-scoped skills work locally without `/plugin install`.
+# Creates symlink .claude/skills/promote-strategist → ../../skills/promote-strategist
+# so that the project-scoped skill works locally without `/plugin install`.
+#
+# v1.4.0 BREAKING : promote-content-batcher SKILL deleted (folded into strategist).
+# Only 1 skill exposed now (promote-strategist).
 #
 # Use this when you've cloned the repo to contribute or fork.
 # For end-user install, use `/plugin marketplace add` + `/plugin install` instead.
@@ -81,7 +84,7 @@ if [ "$errored" -gt 0 ]; then
   exit 1
 fi
 
-echo "Dev mode active. The skills are now available at the project scope."
-echo "Invoke them via /promote-strategist <url> from this repo."
+echo "Dev mode active. The skill is now available at the project scope."
+echo "Invoke it via /promote-strategist <url> from this repo."
 echo ""
-echo "To uninstall the dev symlinks: rm .claude/skills/promote-*"
+echo "To uninstall the dev symlink: rm .claude/skills/promote-strategist"

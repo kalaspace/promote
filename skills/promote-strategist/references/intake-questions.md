@@ -1,10 +1,20 @@
-# Intake Questions — the 5 batches of P1 (v1.3.0)
+# Intake Questions — the 5 batches of P1 (v1.4.0)
 
 The strategist asks ONLY about THE PRODUCT. It NEVER asks about marketing method, channels, frequency, or copy frameworks — those are the strategist's decisions.
 
 For each question : the **intent** (what we'll use it for), the **skip condition** (don't ask if already known), and (where ambiguous) the **rationale** if user pushes back ("why are you asking this?").
 
-**v1.3.0 note** : after P1 (all 5 batches answered), the strategist runs **P1.5 Claims Extraction & Validation** (see `pipeline-phases.md`) to build `intake/verified-claims.csv` from the batch responses. The user reviews the extracted ledger in 15 min before P2 starts. This prevents the v1.2.0 hallucination problem (operators inventing process details not in intake). Authors should be **specific and concrete** in their batch answers — vague answers ("I think I started maybe a year ago") become claims `confidence=LOW` that won't be usable as sources downstream. Specific answers ("started October 2024 with this prompt:...") become `confidence=HIGH` and unlock high-fidelity content production.
+**v1.4.0 note** : the pipeline runs in this order :
+
+- **P0** : crawl URL (extract metadata).
+- **P0.5 (NEW v1.4.0)** : ingest the product itself (TOC for book, docs for SaaS, syllabus for course) into `intake/product-content.md`. **THIS IS WHERE THE TOC GOES** — not in the P1 batches. P1 batches focus on the AUTHOR's perspective (process, ICP, pricing, voice, goals), not on product structure.
+- **P1** : the 5 batches below (focused on author perspective + ICP + market + voice + goals).
+- **P1.5** : claims-extractor extracts factual claims from BOTH P1 batches AND P0.5 product-content.md. STRUCTURE+EXAMPLES claims come EXCLUSIVELY from product-content.md ; PRODUCT/PROCESS/AUTHOR/MARKET/FUTURE_HYPOTHESIS claims come from P1 batches + url-crawl.
+- User reviews the ledger in ~20 min before P2 starts (v1.4.0 ledger is bigger : 40-80 claims vs 20-50 v1.3.0, due to STRUCTURE+EXAMPLES from product-content.md).
+
+**Authors should be specific and concrete** in their batch answers — vague answers ("I think I started maybe a year ago") become claims `confidence=LOW` that won't be usable as sources downstream. Specific answers ("started October 2024 with this prompt:...") become `confidence=HIGH` and unlock high-fidelity content production.
+
+**Authors should NOT describe their TOC in P1 batches** — that's P0.5's job, with the actual product structure ingested as ground truth. If author describes "the book has a chapter on prospection" in batch-1, that becomes a PRODUCT claim (the author claims this), not an EXAMPLES/STRUCTURE claim. Cross-validation against product-content.md will tell.
 
 ---
 

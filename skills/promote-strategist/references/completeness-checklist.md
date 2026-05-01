@@ -1,15 +1,14 @@
-# Completeness Checklist — 28 points (P5 quality gate v1.3.0)
+# Completeness Checklist — 30 points (P5 quality gate v1.4.0)
 
 Run this checklist after P5 packaging. Compute pass percentage.
-- ≥90% (≥26/28) → ship.
-- 70-89% (20-25/28) → loop back to weakest phase, retry once.
-- <70% (<20/28) → escalate to user with detailed gap report.
+- ≥90% (≥27/30) → ship.
+- 70-89% (21-26/30) → loop back to weakest phase, retry once.
+- <70% (<21/30) → escalate to user with detailed gap report.
 
-**v1.3.0 changes vs 40-point v1.2.0**:
-- **Cut Section I.2 + I.3** (Geo audit + Geo baseline) — `09-geo-plan.md` no longer generated.
-- **Trimmed Section J** (Instrumentation) from 3 detailed checks to 1 (top-3 tripwires only).
-- **Cut Pattern #11 sub-check** as separate scoring (folded into per-section anti-pattern check).
-- **Added Section L** (NEW v1.3.0): Claims ledger + never-claims hygiene checks.
+**v1.4.0 changes vs 28-point v1.3.0**:
+- **Added Section M (NEW v1.4.0, 2 points)** : Product content ingestion + STRUCTURE/EXAMPLES grounding rate.
+- Section L expanded from 4 → 4 points (unchanged but with v1.4.0 mentions).
+- Section K updated for full-window calendar (no more outline status).
 
 ---
 
@@ -72,29 +71,35 @@ Run this checklist after P5 packaging. Compute pass percentage.
 
 ## Section K — Calendar & summary (2 points)
 
-- [ ] K1. `11-content-calendar-14d-then-outline.csv` populated for J0-J13 with `body_path` + `meta_path` filled.
-- [ ] K2. `strategy-summary.md` has all sections (Rumelt 1-3, KPI, risks, hypotheses, tradeoffs, hand-off).
+- [ ] K1. `11-content-calendar-Nd-full.csv` populated for the full window (default 90d). All slots `status='concrete'` or `status='manual_review_needed'`. NO outline status v1.4.0.
+- [ ] K2. `strategy-summary.md` has all sections (Rumelt 1-3, KPI, risks, hypotheses, tradeoffs, hand-off, manual_review_needed_count).
 
-## Section L — Claims hygiene (NEW v1.3.0, 4 points)
+## Section L — Claims hygiene (v1.3.0+v1.4.0, 4 points)
 
-- [ ] L1. `intake/verified-claims.csv` exists with ≥10 rows + `verified_by_user` column populated.
-- [ ] L2. `intake/never-claims.txt` exists (may be empty in mode autopilot ; should be reviewed in mode guided).
-- [ ] L3. For each `.md` in `content/posts/` (J0-J13): cross-check `factual_claims_used` in adjacent `.meta.yaml` ; all claim_ids referenced exist in ledger ; 0 unverified claims ; 0 reject_immediate.
-- [ ] L4. For each `.md` in `content/posts/` (J0-J13): NO `{...}` placeholders in body. Reject-on-placeholder rule (Quality Gate #1) was effective.
+- [ ] L1. `intake/verified-claims.csv` exists with ≥30 rows v1.4.0 (≥10 if product-content.md MISSING) + `verified_by_user` column populated. Includes STRUCTURE+EXAMPLES claims if product-content.md COMPLETE.
+- [ ] L2. `intake/never-claims.txt` exists with v1.4.0 default entries (chapter-fabrication blockers, etc.).
+- [ ] L3. For each `.md` in `content/posts/`: cross-check `factual_claims_used` in adjacent `.meta.yaml` ; all claim_ids referenced exist in ledger ; 0 unverified claims ; 0 reject_immediate.
+- [ ] L4. For each `.md` in `content/posts/`: NO `{...}` placeholders in body (Reject-on-placeholder rule).
+
+## Section M — Source-truth grounding (NEW v1.4.0, 2 points)
+
+- [ ] M1. `intake/product-content.md` exists with `STATE.product_content_completeness = COMPLETE` (or PARTIAL with documented gaps). Sections per product_type (chapters/modules/features/cases) populated with structured entries.
+- [ ] M2. Grounding rate ≥ 80% : count of `.meta/{slug}.yaml` files with `gate_7_factual_claims_check.grounding_check_7_1.pass: true` divided by count of PRODUCT_PROMOTION posts. If grounding rate < 80% → most PRODUCT_PROMOTION posts ungrounded → critical fail.
 
 ---
 
-## Total: 28 points
+## Total: 30 points
 
-- 26-28 (≥90%) → SHIP. Set `STATE.status = ready-for-executor`.
-- 20-25 (70-89%) → identify weakest section, loop back once. Common loop targets:
+- 27-30 (≥90%) → SHIP. Set `STATE.status = ready-for-executor`.
+- 21-26 (70-89%) → identify weakest section, loop back once. Common loop targets:
   - Section C/D weak → re-run P3.A.2/A.3 (JTBD or Dunford).
   - Section E weak → re-run P3.A.4/A.5 (Hormozi or Schwartz).
   - Section F weak → re-run P3.A.7/A.8 (Four Fits or PLG).
   - Section G weak → re-run P3.B/C/D (channel-strategist + consultations + refinement).
   - Section H weak → re-run P3.E (pillars consolidation, especially Schwartz routing).
   - Section L weak → P1.5 ledger review + Quality Gate #7 fact-check loop.
-- ≤19 (<70%) → ESCALATE. Output gap report to user, ask if they want to continue or abort.
+  - Section M weak → re-run P0.5 product-content-ingestion (more chapters/modules from product) + P1.5 re-extraction.
+- ≤20 (<70%) → ESCALATE. Output gap report to user, ask if they want to continue or abort.
 
 ## Pattern #11 audit (run alongside, not separately scored)
 
@@ -110,5 +115,6 @@ If any artifact has >2 occurrences → flag as `pattern_11_violation`. Re-genera
 
 ## Changelog
 
+- **0.3.0** (2026-05-01) — v1.4.0. Added Section M (source-truth grounding, 2 points) tied to product-content.md ingestion + Quality Gate #7.1 grounding rate. Updated Section K for full-window calendar (no outline status). Total now 30 points.
 - **0.2.0** (2026-05-01) — v1.3.0. Trimmed from 40 to 28 points (cut Geo audit, trimmed instrumentation, folded Pattern #11). Added Section L (claims hygiene) with 4 checks tied to verified-claims.csv + never-claims.txt + Quality Gate #7 results.
 - **0.1.0** (2026-04-28) — v1.0.0/1.1.0/1.2.0. 40-point checklist.

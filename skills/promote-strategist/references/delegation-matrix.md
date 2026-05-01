@@ -1,18 +1,18 @@
-# Delegation Matrix — verbatim invocation prompts for P3 (v1.3.0)
+# Delegation Matrix — verbatim invocation prompts for P3 (v1.4.0)
 
-The strategist constructs the prompt by template-filling from `STATE.known_facts`, prior artifacts, AND the `verified-claims.csv` ledger (v1.3.0).
+The strategist constructs the prompt by template-filling from `STATE.known_facts`, prior artifacts, AND the v1.4.0 ledger ecosystem (`verified-claims.csv` + `never-claims.txt` + `product-content.md`).
 
 ---
 
-## v1.3.0 — Two-pass orchestration with Read+Task + ledger
+## v1.4.0 — Two-pass orchestration with Read+Task + source-truth ledger
 
 **P3 has 5 sub-phases A-E** (P3.F Rumelt-Aval is OPT-IN via `--rumelt-aval` flag ; ex-P3.F GEO-Plan is CUT). See SKILL.md.
 
 Every operator/persona/framework prompt supports two modes:
 
-- **Mode CONSULTATION** (used in P3.C): operator gives strategic verdict. Output structured (8 fields):
-  `feasibility_score`, `strategic_recommendations` (sourced), `cadence_proposed`, `content_pillar_adjustments`, `prerequisites_or_blockers`, `anti_patterns`, `recommended_skip_or_defer`, **`narrative_hypotheses` (NEW v1.3.0)**.
-- **Mode PRODUCTION** (used in P4 Content Production + content-batcher): operator generates concrete content. Output structured: title + body + `factual_claims_used` + `narrative_gaps_to_fill` + assets_specs + posting_metadata + `atomization_variant_used`.
+- **Mode CONSULTATION** (used in P3.C): operator gives strategic verdict. Output structured (9 fields v1.4.0, was 8 in v1.3.0):
+  `feasibility_score`, `strategic_recommendations` (sourced), `cadence_proposed`, `content_pillar_adjustments`, `prerequisites_or_blockers`, `anti_patterns`, `recommended_skip_or_defer`, `narrative_hypotheses` (v1.3.0), **`must_quote_from` (NEW v1.4.0 — claim_ids of category STRUCTURE/EXAMPLES the pillar must be grounded in ; mandatory non-empty for PRODUCT_PROMOTION pillars)**.
+- **Mode PRODUCTION** (used in P4 Content Production single-run): operator generates concrete content. Output structured: title + body + `factual_claims_used` (with category) + `narrative_gaps_to_fill` + assets_specs + posting_metadata + `atomization_variant_used`. v1.4.0 : content-batcher SKILL DELETED, strategist gère seul P4.
 
 Routing per channel — see `../../../references/content-production.md` for the complete table. All prompts under `prompts/{operators,orchestrators,personas,frameworks,tactical,utility}/{name}/prompt.md` ; invoked via **Read + Task tool**.
 
@@ -76,19 +76,20 @@ FRAMEWORK references (8) — read directly, NO Task spawn:
   → references/channel-{name}.md (read inline, generate via strategist's own LLM)
 ```
 
-**Strategic-consultation Read+Task pattern v1.3.0** (reused for every operator/persona) :
+**Strategic-consultation Read+Task pattern v1.4.0** (reused for every operator/persona) :
 
 ```python
 # Step 1: Read the operator/persona prompt
 operator_path = "prompts/operators/welsh-linkedin/prompt.md"  # from routing table above
 operator_content = Read(operator_path)
 
-# Step 2: Read the verified-claims ledger + never-claims (NEW v1.3.0)
+# Step 2: Read the v1.4.0 ledger ecosystem (verified-claims + never-claims + product-content)
 verified_claims = Read("campaigns/{slug}/intake/verified-claims.csv")
 never_claims = Read("campaigns/{slug}/intake/never-claims.txt")
-anti_fab_contract = Read("references/anti-fabrication-contract.md")
+product_content = Read("campaigns/{slug}/intake/product-content.md")  # NEW v1.4.0
+anti_fab_contract = Read("references/anti-fabrication-contract.md")  # incl. Product-Promotion Constraint v1.4.0
 
-# Step 3: Build context payload (the 7 strategic inputs + 2 ledger inputs v1.3.0)
+# Step 3: Build context payload (7 strategic inputs + 3 ledger inputs v1.4.0)
 context = {
   "product_brief": <00-product-brief.md résumé>,
   "icp": <STATE.icp_real>,
@@ -97,8 +98,9 @@ context = {
   "awareness_stage": <04-offer-audit.md awareness section>,
   "goal_90d": <STATE.primary_goal>,
   "constraints": <STATE.budget_constraints>,
-  "verified_claims_csv": verified_claims,  # NEW v1.3.0
-  "never_claims_txt": never_claims,         # NEW v1.3.0
+  "verified_claims_csv": verified_claims,
+  "never_claims_txt": never_claims,
+  "product_content_md": product_content,  # NEW v1.4.0
 }
 
 # Step 4: Spawn subagent with operator voice + ledger + context + consultation directive
@@ -128,6 +130,10 @@ NEVER CLAIMS (forbidden phrasings — semantic match = REJECT_IMMEDIATE in produ
 
 {never_claims}
 
+PRODUCT CONTENT (the source-of-truth for STRUCTURE/EXAMPLES claims — chapters/modules/features/cases LITERALLY in the product) :
+
+{product_content}
+
 NOW RUN A STRATEGIC CONSULTATION on this campaign context:
 
 Product : {context['product_brief']}
@@ -138,7 +144,7 @@ Awareness stage : {context['awareness_stage']}
 Goal 90d : {context['goal_90d']}
 Constraints : {context['constraints']}
 
-Return STRICTLY this Markdown structure (8 fields v1.3.0):
+Return STRICTLY this Markdown structure (9 fields v1.4.0):
 
 ## feasibility_score
 {{1-10}}
@@ -161,7 +167,7 @@ Return STRICTLY this Markdown structure (8 fields v1.3.0):
 ## recommended_skip_or_defer
 {{if feasibility < 5: explanation. Else: 'retain'}}
 
-## narrative_hypotheses (NEW v1.3.0)
+## narrative_hypotheses (v1.3.0)
 For any narrative angle you propose that depends on a factual claim NOT in
 verified-claims.csv, list it here:
 
@@ -171,6 +177,19 @@ verified-claims.csv, list it here:
   fallback_if_unconfirmed: "{{safe alternative, e.g., 'Reframe as: AI from day 0 with directive cuts'}}"
 
 If all your angles are sourced, return: `narrative_hypotheses: []`.
+
+## must_quote_from (NEW v1.4.0)
+List the claim_ids of category STRUCTURE or EXAMPLES (sourced from product-content.md)
+that THIS PILLAR must be grounded in for downstream P4 production. At least 1 if pillar
+is for PRODUCT_PROMOTION (selling/promoting the product). Empty list = pillar is INDUSTRY_PERSPECTIVE
+(thought-leadership, not directly promoting the product — exempt from grounding requirement).
+
+- claim_id: C031  # STRUCTURE — Chapter 3 title
+- claim_id: C047  # EXAMPLES — Bruno l'usineur case
+- claim_id: C062  # STRUCTURE — Filtre #2 of the book
+
+If pillar is PRODUCT_PROMOTION but you cannot list any STRUCTURE/EXAMPLES claim_id, the pillar is
+REJECTED — signal that this pillar is not actually grounded in the product (re-design the pillar).
 """
 )
 ```
@@ -330,6 +349,7 @@ If a gate fails, retry the delegation ONCE with refined input. If second retry f
 
 ## Changelog
 
+- **0.4.0** (2026-05-01) — v1.4.0. Added `product-content.md` to context payload of all consultations + production. Added `must_quote_from` field (9th consultation field — list of STRUCTURE/EXAMPLES claim_ids the pillar must ground in). Anti-fabrication-contract.md enriched with Product-Promotion Constraint section. content-batcher SKILL deleted — strategist single-run.
 - **0.3.0** (2026-05-01) — v1.3.0. Added ledger context (verified-claims.csv + never-claims.txt + anti-fabrication-contract.md) to all Read+Task invocations. Added `narrative_hypotheses` (8th consultation field). Cut Steps l (Geo) + n (Holiday earned-media) + ex-Step m full instrumentation. Trimmed delegation matrix from 15 steps to ~12 + 1 channel-strategist + per-channel cascade.
 - **0.2.0** (2026-04-29) — v1.1.0/v1.2.0. Two-pass orchestration (P3 sub-phases A-G). Read+Task pattern v1.2.0.
 - **0.1.0** (2026-04-28) — Initial release.
